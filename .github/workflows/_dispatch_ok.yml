@@ -1,0 +1,9 @@
+name: _dispatch_ok
+on:
+  workflow_dispatch:
+
+jobs:
+  noop:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo ok
