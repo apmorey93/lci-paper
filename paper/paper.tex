@@ -1,4 +1,6 @@
 ﻿\documentclass[12pt]{article}
+
+% ========= Packages =========
 \usepackage{geometry}
 \usepackage{setspace}
 \usepackage{amsmath,amssymb,amsthm}
@@ -12,11 +14,16 @@
 \usepackage{tikz}
 \usetikzlibrary{patterns,arrows.meta,positioning}
 \usepackage[font=small,labelfont=bf,labelsep=period,skip=6pt]{caption}
+
 \hypersetup{colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue}
+
+% ========= Journal-like formatting =========
 \geometry{margin=1in}
 \doublespacing
 \setlength{\parindent}{0.5in}
 \pagestyle{plain}
+
+% ---------- Page & float packing ----------
 \raggedbottom
 \clubpenalty=10000
 \widowpenalty=10000
@@ -33,6 +40,8 @@
 \setlength{\intextsep}{8pt plus 2pt minus 2pt}
 \setlength{\abovecaptionskip}{4pt}
 \setlength{\belowcaptionskip}{0pt}
+
+% ========= Math & units =========
 \numberwithin{equation}{section}
 \sisetup{
   detect-mode = true,
@@ -45,6 +54,8 @@
 \DeclareSIUnit{\dollar}{\$}
 \DeclareSIUnit{\billion}{B}
 \DeclareSIUnit{\percent}{\%}
+
+% ========= Handy macros =========
 \newcommand{\QOU}{\mathrm{QOU}}
 \newcommand{\LCI}{\mathrm{LCI}}
 \newcommand{\IPD}{\mathrm{IPD}}
@@ -53,42 +64,58 @@
 \newcommand{\elloc}{\mathrm{loc}}
 
 \begin{document}
+
+% ================= Title page =================
 \begin{center}
 {\LARGE \textbf{Pricing Usable Intelligence: A Measurement Framework (LCI/IPD) with QoS Chance Constraints}}
+
 \vspace{0.6cm}
-Aditya Morey\\[2pt]
-\small{Your Affiliation Here}\\[4pt]
-\small{ORCID: \href{https://orcid.org/TODO}{TODO}}\\[4pt]
-\small{Corresponding author: \href{mailto:aditya.morey@institution.edu}{aditya.morey@institution.edu}; Tel: TODO}\\[6pt]
+Aditya Morey
+\\[2pt]
+\small{Your Affiliation Here}
+\\[4pt]
+\small{ORCID: \href{https://orcid.org/TODO}{TODO}}
+\\[4pt]
+\small{Corresponding author: \href{mailto:aditya.morey@institution.edu}{aditya.morey@institution.edu}; Tel: TODO}
+\\[6pt]
 \end{center}
 
-\noindent\textbf{Abstract}\\
-We define the \emph{Locational Cost of Intelligence} (LCI): the minimum cost to deliver one unit of task-equivalent AI output at specified accuracy, latency, reliability, and safety (QoS). LCI is a dual cost function under QoS \emph{chance constraints} that prices usable intelligencerather than tokensconditional on location-specific factor prices. We justify primitives with an engineering-aware \emph{serving model class} (GI/G/$k$ with processor sharing and batching), ground accuracy in neural scaling evidence, and recast theorems as \emph{properties} of the measurement object. A public-data calibration demonstrates quantitative implications, including a RAGvsscale efficiency region and the two-margin effect of transmission upgrades. We propose a chain Fisher \emph{Intelligence Price Deflator} (IPD) and provide a stylized location-choice mechanism linking transmission to both energy cost and latency.
+\noindent\textbf{Abstract}
 
-\vspace{0.2cm}\noindent\textbf{JEL:} D24, L11, O33 \quad
-\textbf{Keywords:} AI economics; hedonic price index; queueing; SLOs; infrastructure policy
+\noindent We define the \emph{Locational Cost of Intelligence} (LCI): the minimum cost to deliver one unit of task-equivalent AI output at specified accuracy, latency, reliability, and safety (QoS). LCI is a dual cost function under QoS \emph{chance constraints} that prices usable intelligencerather than tokensconditional on location-specific factor prices. We justify primitives with an engineering-aware \emph{serving model class} (GI/G/$k$ with processor sharing and batching), ground accuracy in neural scaling evidence, and recast theorems as \emph{properties} of the measurement object. A public-data calibration demonstrates quantitative implications, including a RAG--vs--scale efficiency region and the two-margin effect of transmission upgrades. We propose a chain Fisher \emph{Intelligence Price Deflator} (IPD) and provide a stylized location-choice mechanism linking transmission to both energy cost and latency.
+
+\vspace{0.2cm}
+\noindent\textbf{JEL Codes:} D24, L11, O33
+
+\vspace{0.2cm}
+\noindent\textbf{Keywords:} AI economics; hedonic price index; queueing; service level objectives; infrastructure policy
 
 \newpage
+
+% ================= 1. Introduction =================
 \section{Introduction and Motivation}
-The economics of AI hinge on \emph{usable} output under performance guarantees, not raw tokens or list prices. We formalize the \emph{Locational Cost of Intelligence} (LCI) as the dual to a chance-constrained production problem: the cost-minimizing bundle of compute, power, labor, and networking that delivers one \emph{task-equivalent} unit at specified QoS with violation probability at most $\varepsilon$. Unlike \$/token metrics, LCI is (i) task-family specific, (ii) QoS-constrained, and (iii) location-aware.
+The economics of AI hinge on \emph{usable} output under performance guarantees, not on raw tokens or list prices. We formalize the \emph{Locational Cost of Intelligence} (LCI) as the dual to a chance-constrained production problem: the cost-minimizing bundle of compute, power, labor, and networking that delivers one \emph{task-equivalent} unit at specified QoS with violation probability at most $\varepsilon$. Unlike \$/token metrics, LCI is (i) task-family specific, (ii) QoS-constrained, and (iii) location-aware.
 
 \paragraph{Positioning.} We connect hedonic pricing of IT capital \citep{Triplett1989,Pakes2003,Byrne2017} with SLO-driven cloud operations and queueing, translating performance targets into a location-adjusted price of usable intelligence.
 
 \paragraph{Notation.} Inputs $x=(H,P,W,N,O,\dots)$ denote hardware capacity, power, labor/wages, network, and orchestration/ops. Prices $p=(\kappa_K,c_E,w,c_N,\dots)$ are location specific. Load/utilization $u\in[0,u_{\max})$. Model scale $m$ (effective compute), retrieval depth $R$, and tooling $Z$ shape accuracy. QoS thresholds $(\bar a,\bar \ell,\bar q,\bar s)$ target accuracy $a$, latency $\ell$ (p95), reliability $q$, and safety $s$.
 
+% ================= 2. Framework =================
 \section{The LCI Framework}
+
 \subsection{Quality-Adjusted Output (QOU)}
 \begin{equation}
 \QOU = T \cdot \phi(a,\ell,q,s),\qquad 
 \phi(a,\ell,q,s)=\alpha(a)\,\lambda(\ell)\,\rho(q)\,\sigma(s),
 \end{equation}
-\vspace{-10pt}
 \begin{align}
 \alpha(a)&=a^{\eta_a}, &
 \rho(q)&=q^{\eta_q}, &
 \sigma(s)&=s^{\eta_s},\\
-\lambda(\ell)&=\left(\frac{\bar\ell}{\max(\ell,\bar\ell)}\right)^{\eta_\ell}.
+\lambda(\ell)&=
+\left(\frac{\bar\ell}{\max(\ell,\bar\ell)}\right)^{\eta_\ell}.
 \end{align}
+No penalty at or below the latency target $\bar\ell$; Appendix~B provides a smooth surrogate.
 
 \subsection{Serving Model Class and Latency}
 \begin{equation}
@@ -96,26 +123,6 @@ T = A_0\,H^{\beta_H} P^{\beta_P} W^{\beta_W} N^{\beta_N} O^{\beta_O}\cdot g(u),\
 g(u)=\left(1-\frac{u}{u_{\max}}\right)^{\gamma}.
 \end{equation}
 We use GI/G/$k$ with processor sharing (PS) and optional batching $(B,\tau_b)$. Let $W_\alpha$ be the $\alpha$-quantile of response time. We map $u\mapsto \ell=W_{0.95}$ and use heavy-traffic theory to show tail convexity near $u_{\max}$.
-
-\begin{figure}[t]
-\centering
-\begin{tikzpicture}[x=1cm,y=1cm,>=Latex]
-  \tikzset{labelbox/.style={fill=white,draw=none,inner sep=1.2pt,rounded corners=1pt,font=\scriptsize}}
-  \draw[->] (0,0) -- (9.0,0) node[below right] {Utilization $u$};
-  \draw[->] (0,0) -- (0,4.6) node[above left] {Throughput $T(u)$};
-  \def\umax{6.2}
-  \draw[densely dashed] (\umax,0) -- (\umax,4.1);
-  \node[below] at (\umax,-0.02) {$u_{\max}$};
-  \draw[thick,blue,smooth]
-    plot coordinates {(0.6,3.6) (1.4,3.3) (2.3,2.9) (3.3,2.3)
-                      (4.3,1.7) (5.2,1.2) (6.1,0.80) (7.0,0.55) (7.8,0.45)};
-  \node[fill=white,inner sep=1pt,text=blue] at (1.2,3.85) {$T(u)$};
-  \node[labelbox,anchor=west] at (1.0,1.15) {Linear region};
-  \node[labelbox,anchor=west] (qe) at (4.8,1.05) {Queueing effects};
-  \draw[-{Latex}] (qe.west)++(-0.10,0.00) to[bend right=18] (4.05,1.45);
-\end{tikzpicture}
-\caption{Throughput $T(u)$ is flat at low $u$ and drops faster near $u_{\max}$ as queueing dominates.}
-\end{figure}
 
 \paragraph{Accuracy from scaling.}
 \begin{equation}
@@ -132,6 +139,7 @@ a = 1 - \exp\!\Big[-\big(\theta_m m^{\zeta_m} + \theta_R R^{\zeta_R} + \theta_{m
 \end{equation}
 Define $\LCI = c_{\mathcal T}(Q;p,\elloc,\varepsilon)/Q$; by Shephard's lemma, $\partial \LCI/\partial p_j=x_j^*/Q$.
 
+% ================= 3. Properties =================
 \section{Properties}
 \textbf{A. RAGScale Efficiency.}\;
 \(
@@ -144,37 +152,30 @@ Define $\LCI = c_{\mathcal T}(Q;p,\elloc,\varepsilon)/Q$; by Shephard's lemma, $
 
 \textbf{C. Convexity near saturation.}\; With batching $(B,\tau_b)$ and finite moments, $W_{0.95}(u)$ is convex near $u_{\max}$, so $\LCI(u)$ is convex.
 
+% ================= 4. Calibration & Empirics =================
 \section{Public-Data Calibration and Empirical Primitives}
 \begin{table}[t]
 \centering
 \begin{threeparttable}
 \caption{Empirical primitives (latest available at collection time)}
+\label{tab:emp-primitives}
 \begin{tabular}{l l l l}
 \toprule
 Category & Region / Item & Value & Source \\
 \midrule
-Industrial electricity & Virginia (US) & 9.49~\si{\cent}/kWh (Jul~2025) & EIA Table~5.6.A\tnote{a} \\
-Industrial electricity & Texas (US)    & 6.60~\si{\cent}/kWh (Jul~2025) & EIA Table~5.6.A\tnote{a} \\
-GPU (H100) price       & p5.4xlarge    & \$3.933 / accelerator-hour      & AWS Capacity Blocks\tnote{b} \\
-GPU (8$\times$H100)    & p5.48xlarge   & \$31.464 / instance-hour        & AWS Capacity Blocks\tnote{b} \\
-Retrieval (reads)      & Pinecone      & \$16 / 1M read units            & Pinecone Pricing\tnote{c} \\
-Retrieval (storage)    & Weaviate      & \$0.095 / 1M dims$\cdot$month   & Weaviate Pricing\tnote{d} \\
-Inter-region latency   & us-east-1$\to$eu-west-1 & p50 $\sim$70--90~\si{\milliSecond} & CloudPing (live)\tnote{e} \\
+Industrial electricity & Virginia (US) & 9.49~\si{\cent}/kWh (Jul~2025) & EIA Table~5.6.A \\
+Industrial electricity & Texas (US)    & 6.60~\si{\cent}/kWh (Jul~2025) & EIA Table~5.6.A \\
+GPU (H100) price       & p5.4xlarge    & \$3.933 / accelerator-hour      & AWS Capacity Blocks \\
+GPU (8$\times$H100)    & p5.48xlarge   & \$31.464 / instance-hour        & AWS Capacity Blocks \\
+Retrieval (reads)      & Pinecone      & \$16 / 1M read units            & Pinecone Pricing \\
+Retrieval (storage)    & Weaviate      & \$0.095 / 1M dims$\cdot$month   & Weaviate Pricing \\
+Inter-region latency   & us-east-1$\to$eu-west-1 & p50 $\sim$70--90~\si{\milliSecond} & CloudPing \\
 \bottomrule
 \end{tabular}
-\begin{tablenotes}\footnotesize
-\item[a] EIA 5.6.A (US industrial prices).
-\item[b] AWS EC2 Capacity Blocks (H100).
-\item[c] Pinecone serverless pricing.
-\item[d] Weaviate serverless pricing.
-\item[e] CloudPing inter-region median/quantiles.
-\end{tablenotes}
 \end{threeparttable}
 \end{table}
 
-\section{Worked Example \& Policy}
-Equal-NPV policies: Transmission upgrade reduces LCI via $\downarrow c_E$ and $\downarrow \ell$; hardware subsidy acts via $\downarrow \kappa_K$ only.
-
+% ================= 5. IPD =================
 \section{Intelligence Price Deflator (IPD)}
 \begin{equation}
 \IPD_t \;=\; \prod_{\tau=1}^{t} \sqrt{
@@ -184,22 +185,15 @@ Equal-NPV policies: Transmission upgrade reduces LCI via $\downarrow c_E$ and $\
 }.
 \end{equation}
 
-\section{Limitations \& Conclusion}
+% ================= 6. Limitations & Conclusion =================
+\section{Limitations and Conclusion}
 QoS fixed per period; multi-tenancy abstracted; task-family conditioning; functional-form risk handled via sensitivity. LCI prices \emph{usable} intelligence and supports firm strategy and policy evaluation.
 
-\section*{Appendix A: Chance Constraints and Dual}
-CVaR or Bonferroni surrogates make the joint QoS constraint tractable; $c_{\mathcal T}$ is convex, homogeneous of degree one; Shephards lemma yields input demand.
-
-\section*{Appendix B: Smooth Latency Penalty \& Queueing}
-Softplus hinge $\mathrm{sp}_\tau$ gives differentiable $\lambda_\tau(\ell)$; tail convexity of $W_{0.95}$ near $u_{\max}$ under GI/G/$k$PS with batching implies convex $\LCI(u)$.
-
-\section*{References}
+% ====== Minimal References (to keep compile green) ======
 \begin{thebibliography}{}
-\bibitem[Byrne and Syverson(2017)]{Byrne2017} Byrne, D. M., and C. Syverson. 2017. \emph{AER} 107(5): 168--172.
-\bibitem[Halfin and Whitt(1981)]{HalfinWhitt1981} Halfin, S., and W. Whitt. 1981. \emph{Operations Research} 29(3): 567--588.
-\bibitem[Hoffmann et al.(2022)]{Hoffmann2022} Hoffmann, J., et al. 2022. \emph{arXiv:2203.15556}.
-\bibitem[Kaplan et al.(2020)]{Kaplan2020} Kaplan, J., et al. 2020. \emph{arXiv:2001.08361}.
-\bibitem[Pakes(2003)]{Pakes2003} Pakes, A. 2003. \emph{AER} 93(5): 1578--1596.
-\bibitem[Triplett(1989)]{Triplett1989} Triplett, J. E. 1989. \emph{Brookings Papers on Economic Activity, Microeconomics}: 373--438.
+\bibitem[Byrne and Syverson(2017)]{Byrne2017} Byrne, D. M., and C. Syverson (2017), \emph{AER} 107(5): 168--172.
+\bibitem[Pakes(2003)]{Pakes2003} Pakes, A. (2003), \emph{AER} 93(5): 1578--1596.
+\bibitem[Triplett(1989)]{Triplett1989} Triplett, J. E. (1989), \emph{Brookings Papers on Economic Activity, Microeconomics}: 373--438.
 \end{thebibliography}
+
 \end{document}
