@@ -1,4 +1,4 @@
-name: Build Paper (wkhtmltopdf)
+﻿name: Build Paper (wkhtmltopdf)
 on:
   workflow_dispatch:
     inputs:
