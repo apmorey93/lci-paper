@@ -1,1 +1,2 @@
 ﻿model,family,dataset,split,metric,value,seed,timestamp
+modelA,Open,hellaswag,val,acc@1,0.724,0,2025-10-06T10:15:00Z

@@ -1,1 +1,2 @@
 ﻿model,family,prompt_len,output_len,latency_ms_p50,latency_ms_p95,tokens_per_sec,hardware,batch_size,timestamp
+modelA,Open,512,128,180,320,12000,A100-80GB,1,2025-10-06T10:16:00Z
