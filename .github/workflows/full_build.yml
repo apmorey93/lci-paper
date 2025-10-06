@@ -69,18 +69,23 @@ PY
         run: |
           mkdir -p paper
           [ -f paper/main.md ] || printf "# LCI Paper (Draft)\n\nThis is a minimal draft to ensure CI produces a PDF.\n" > paper/main.md
-
-      - name: Build paper (Markdown → HTML → wkhtmltopdf)
+      - name: Build paper (wkhtmltopdf)
         shell: bash
         run: |
           set -e
-          mkdir -p out
           sudo apt-get update -y
           sudo apt-get install -y --no-install-recommends pandoc wkhtmltopdf
-          pandoc paper/main.md -t html5 -s -o out/paper.html
+          mkdir -p out
+          if [ -f paper/main.tex ]; then
+            # If you later want LaTeX again, add texlive here and latexmk path.
+            pandoc paper/main.tex -t html5 -s -o out/paper.html
+          else
+            SRC="paper/main.md"
+            [ -f "$SRC" ] || { echo "# LCI Paper (Placeholder)" > "$SRC"; echo "" >> "$SRC"; }
+            pandoc "$SRC" -t html5 -s -o out/paper.html
+          fi
           wkhtmltopdf --enable-local-file-access out/paper.html out/paper.pdf
           test -f out/paper.pdf
-
       - name: Upload paper.pdf
         if: always()
         uses: actions/upload-artifact@v4
@@ -100,3 +105,4 @@ PY
             data/interim/lci_by_family.csv
           if-no-files-found: warn
           retention-days: 7
+
