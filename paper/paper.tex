@@ -10,7 +10,8 @@
 \usepackage{threeparttable}
 \usepackage[round]{natbib}
 \usepackage{hyperref}
-\usepackage{xcolor}
+\\usepackage{xcolor}
+\\usepackage{textcomp}
 \usepackage{tikz}
 \usetikzlibrary{patterns,arrows.meta,positioning}
 \usepackage[font=small,labelfont=bf,labelsep=period,skip=6pt]{caption}
@@ -163,8 +164,8 @@ Define $\LCI = c_{\mathcal T}(Q;p,\elloc,\varepsilon)/Q$; by Shephard's lemma, $
 \toprule
 Category & Region / Item & Value & Source \\
 \midrule
-Industrial electricity & Virginia (US) & 9.49~\si{\cent}/kWh (Jul~2025) & EIA Table~5.6.A \\
-Industrial electricity & Texas (US)    & 6.60~\si{\cent}/kWh (Jul~2025) & EIA Table~5.6.A \\
+Industrial electricity & Virginia (US) & 9.49~\si{\cent\per\kilo\watt\hour} (Jul~2025) & EIA Table~5.6.A \\
+Industrial electricity & Texas (US)    & 6.60~\si{\cent\per\kilo\watt\hour} (Jul~2025) & EIA Table~5.6.A \\
 GPU (H100) price       & p5.4xlarge    & \$3.933 / accelerator-hour      & AWS Capacity Blocks \\
 GPU (8$\times$H100)    & p5.48xlarge   & \$31.464 / instance-hour        & AWS Capacity Blocks \\
 Retrieval (reads)      & Pinecone      & \$16 / 1M read units            & Pinecone Pricing \\
@@ -197,3 +198,4 @@ QoS fixed per period; multi-tenancy abstracted; task-family conditioning; functi
 \end{thebibliography}
 
 \end{document}
+
