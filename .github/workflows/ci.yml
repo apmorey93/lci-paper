@@ -18,6 +18,13 @@ jobs:
       with:
         python-version: '3.11'
 
+    - name: Prepare folders
+      run: |
+        mkdir -p data/interim
+        mkdir -p results/tables
+        mkdir -p results/figures
+        mkdir -p results/pdf
+
     - name: Install dependencies
       run: |
         python -m venv .venv
