@@ -1,6 +1,6 @@
 ﻿import os, json, sys, time, platform
 from pathlib import Path
-import pandas as pd
+Path('data/interim').mkdir(parents=True, exist_ok=True)\nimport pandas as pd
 import numpy as np
 
 BASE = Path(__file__).resolve().parents[1]
@@ -53,7 +53,7 @@ def main():
     merged_path = BASE / "data" / "interim" / "merged_inputs.csv"
     if not merged_path.exists():
         template = "date,family,provider,model,region,a,p50_ms,p95_ms,q,s,tokens_per_sec,price_per_token_usd,ops_pct\n"
-        merged_path.write_text(template)
+        merged_path.parent.mkdir(parents=True, exist_ok=True)\n    merged_path.write_text(template)
         print(f"[INFO] Created template {merged_path}. Please populate with public inputs.")
         sys.exit(1)
 
@@ -96,3 +96,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
