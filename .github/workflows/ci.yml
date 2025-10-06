@@ -1,4 +1,4 @@
-﻿name: LCI Auto Build
+name: LCI Auto Build
 
 on:
   workflow_dispatch:
@@ -9,50 +9,3 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-
-    steps:
-    - name: Checkout repo
-      uses: actions/checkout@v4
-
-    - name: Set up Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: '3.11'
-
-    - name: Prepare folders
-      run: |
-        mkdir -p data/interim
-        mkdir -p results/tables
-        mkdir -p results/figures
-        mkdir -p results/pdf
-
-    - name: Install dependencies
-      run: |
-        python -m venv .venv
-        source .venv/bin/activate
-        pip install -r requirements.txt
-
-    - name: Run data integration
-      run: |
-
-- name: Generate demo results (fallback)
-  run: python src/generate_demo_results.py
-        source .venv/bin/activate
-        python src/data_integration.py || echo "Integration failed, continuing with fallback"
-
-    - name: Run main pipeline
-      run: |
-        source .venv/bin/activate
-        python src/lci_program.py
-        python src/make_ipd.py
-        python src/figures.py
-
-    - name: Upload artifacts
-      uses: actions/upload-artifact@v4
-      with:
-        name: lci-results
-        path: |
-          results/tables/
-          results/figures/
-
-
