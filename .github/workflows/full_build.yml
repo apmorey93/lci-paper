@@ -65,6 +65,43 @@ jobs:
             results/**
             paper/*.pdf
           if-no-files-found: warn
+  - name: Build paper (PDF)
+    shell: bash
+    run: |
+      set -e
+      mkdir -p out
+      # Try LaTeX sources first
+      if ls paper/*.tex main.tex src/*.tex 1>/dev/null 2>&1; then
+        sudo apt-get update -y
+        sudo apt-get install -y --no-install-recommends latexmk texlive-latex-recommended texlive-fonts-recommended texlive-latex-extra
+        TEXSRC="$(ls paper/*.tex 2>/dev/null | head -n1 || true)"
+        TEXSRC="${TEXSRC:-$(ls main.tex 2>/dev/null || true)}"
+        if [ -z "$TEXSRC" ]; then TEXSRC="$(ls src/*.tex 2>/dev/null | head -n1 || true)"; fi
+        latexmk -pdf -interaction=nonstopmode -halt-on-error -outdir=out "$TEXSRC"
+      # Then try Markdown with pandoc
+      elif ls paper/*.md paper/main.md README.md 1>/dev/null 2>&1; then
+        sudo apt-get update -y
+        sudo apt-get install -y --no-install-recommends pandoc
+        MDSRC="$(ls paper/*.md 2>/dev/null | head -n1 || true)"
+        MDSRC="${MDSRC:-paper/main.md}"
+        MDSRC="${MDSRC:-README.md}"
+        pandoc "$MDSRC" -o out/paper.pdf
+      # Last resort: placeholder PDF so we always have a PDF artifact
+      else
+        sudo apt-get update -y
+        sudo apt-get install -y --no-install-recommends pandoc
+        cat >/tmp/placeholder.md <<'MD'
+  # LCI Paper (Placeholder)
+
+  This run produced result tables, but no TeX/Markdown sources were found in the repository.
+
+  - `results/tables/lci_by_family.csv`
+  - `results/tables/ipd.csv`
+
+  Add `paper/main.tex` (or `paper/main.md`) to build a real PDF.
+  MD
+        pandoc /tmp/placeholder.md -o out/paper.pdf
+      fi
   - name: Upload PDFs
     if: always()
     uses: actions/upload-artifact@v4
@@ -77,5 +114,6 @@ jobs:
         **/*.pdf
       if-no-files-found: warn
       retention-days: 7
+
 
 
