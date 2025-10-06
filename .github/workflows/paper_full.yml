@@ -1,0 +1,95 @@
+name: LCI Full Build (wkhtmltopdf)
+on:
+  push:
+  workflow_dispatch:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install pandas matplotlib pyyaml
+
+      - name: Prepare results tables (LCI + IPD)
+        shell: bash
+        run: |
+          set -e
+          mkdir -p data/raw data/interim results/tables out
+          [ -f data/raw/accuracy.csv ] || echo "model,family,dataset,split,metric,value,seed,timestamp" > data/raw/accuracy.csv
+          [ -f data/raw/latency.csv ]  || echo "model,family,prompt_len,output_len,latency_ms_p50,latency_ms_p95,tokens_per_sec,hardware,batch_size,timestamp" > data/raw/latency.csv
+          if [ ! -f scripts/aggregate_lci.py ]; then
+            mkdir -p scripts
+            cat > scripts/aggregate_lci.py <<'PY'
+#!/usr/bin/env python3
+import pandas as pd, argparse, sys
+p = argparse.ArgumentParser()
+p.add_argument("--accuracy", required=True)
+p.add_argument("--latency", required=True)
+p.add_argument("--out", required=True)
+a = p.parse_args()
+try:
+    acc = pd.read_csv(a.accuracy)
+    lat = pd.read_csv(a.latency)
+except Exception as e:
+    print("Read CSV error:", e, file=sys.stderr)
+    acc = pd.DataFrame(); lat = pd.DataFrame()
+if acc.empty or lat.empty:
+    pd.DataFrame([{"family":"Stub","lci":0,"source":"empty","n":0}]).to_csv(a.out,index=False)
+else:
+    acc_g = acc.groupby("family")["value"].mean().rename("acc_mean")
+    lat_g = lat.groupby("family")["latency_ms_p50"].median().rename("lat_p50")
+    df = acc_g.to_frame().join(lat_g, how="inner")
+    df["lci"] = df["acc_mean"] / (1.0 + df["lat_p50"]/1000.0)
+    df["source"] = "ci"; df["n"] = 1
+    df.reset_index().to_csv(a.out, index=False)
+print(f"Wrote {a.out}")
+PY
+            chmod +x scripts/aggregate_lci.py
+          fi
+          python scripts/aggregate_lci.py --accuracy data/raw/accuracy.csv --latency data/raw/latency.csv --out data/interim/lci_by_family.csv
+          cp -f data/interim/lci_by_family.csv results/tables/lci_by_family.csv 2>/dev/null || true
+          [ -f results/tables/ipd.csv ] || { echo "family,ipd" > results/tables/ipd.csv; echo "Open,0.0" >> results/tables/ipd.csv; }
+
+      - name: Build paper (wkhtmltopdf)
+        shell: bash
+        run: |
+          set -e
+          sudo apt-get update -y
+          sudo apt-get install -y --no-install-recommends pandoc wkhtmltopdf
+          mkdir -p out
+          if [ -f paper/main.tex ]; then
+            pandoc paper/main.tex -t html5 -s -o out/paper.html
+          else
+            SRC="paper/main.md"
+            [ -f "" ] || { echo "# LCI Paper (Placeholder)" > ""; echo "" >> ""; }
+            pandoc "" -t html5 -s -o out/paper.html
+          fi
+          wkhtmltopdf --enable-local-file-access out/paper.html out/paper.pdf
+          test -f out/paper.pdf
+
+      - name: Upload paper.pdf
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: paper-pdf
+          path: out/paper.pdf
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Upload results (tables)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lci-results
+          path: |
+            results/tables/*.csv
+            data/interim/lci_by_family.csv
+          if-no-files-found: warn
+          retention-days: 7
