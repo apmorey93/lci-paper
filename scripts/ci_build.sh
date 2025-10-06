@@ -1,5 +1,9 @@
-﻿#!/usr/bin/env bash
+#!/usr/bin/env bash
 set -euo pipefail
+
+# ----- PYTHON DEPS -----
+python -m pip install --upgrade pip
+pip install pandas matplotlib pyyaml
 
 # ----- PREP RESULTS -----
 mkdir -p data/raw data/interim results/tables out scripts
@@ -31,9 +35,8 @@ else:
     df.reset_index().to_csv(a.out, index=False)
 print(f"Wrote {a.out}")
 PY
-chmod +x scripts/aggregate_lci.py
 
-python3 scripts/aggregate_lci.py --accuracy data/raw/accuracy.csv --latency data/raw/latency.csv --out data/interim/lci_by_family.csv
+python scripts/aggregate_lci.py --accuracy data/raw/accuracy.csv --latency data/raw/latency.csv --out data/interim/lci_by_family.csv
 mkdir -p results/tables
 cp -f data/interim/lci_by_family.csv results/tables/lci_by_family.csv 2>/dev/null || true
 [ -f results/tables/ipd.csv ] || { echo "family,ipd" > results/tables/ipd.csv; echo "Open,0.0" >> results/tables/ipd.csv; }
