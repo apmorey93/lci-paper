@@ -1,0 +1,38 @@
+name: Build Paper (wkhtmltopdf)
+on:
+  workflow_dispatch:
+    inputs:
+      note:
+        description: "Run note (optional)"
+        required: false
+        default: ""
+concurrency:
+  group: build-paper-${{ github.ref }}
+  cancel-in-progress: true
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+      - name: Run CI build script
+        shell: bash
+        run: |
+          echo "NOTE: ${{ github.event.inputs.note }}"
+          bash scripts/ci_build.sh
+      - name: Upload artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: paper-and-results
+          path: |
+            out/paper.pdf
+            results/tables/*.csv
+          if-no-files-found: warn
+          retention-days: 7
