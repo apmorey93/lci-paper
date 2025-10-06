@@ -1,0 +1,31 @@
+﻿name: Paper Canary
+
+on:
+  workflow_dispatch:
+  push:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Ensure minimal paper
+        shell: bash
+        run: |
+          mkdir -p paper out
+          [ -f paper/main.md ] || printf "# Canary\n\nHello.\n" > paper/main.md
+
+      - name: Build PDF with pandoc
+        shell: bash
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y --no-install-recommends pandoc
+          pandoc paper/main.md -o out/paper.pdf
+          test -f out/paper.pdf
+
+      - name: Upload paper.pdf
+        uses: actions/upload-artifact@v4
+        with:
+          name: paper-pdf
+          path: out/paper.pdf
