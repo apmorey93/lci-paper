@@ -1,6 +1,7 @@
 ﻿import os, json, sys, time, platform
 from pathlib import Path
-Path('data/interim').mkdir(parents=True, exist_ok=True)\nimport pandas as pd
+Path('data/interim').mkdir(parents=True, exist_ok=True)
+import pandas as pd
 import numpy as np
 
 BASE = Path(__file__).resolve().parents[1]
@@ -96,4 +97,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
