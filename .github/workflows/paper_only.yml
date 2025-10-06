@@ -13,19 +13,22 @@ jobs:
       - name: Ensure minimal paper
         shell: bash
         run: |
+          set -e
           mkdir -p paper out
           [ -f paper/main.md ] || printf "# Canary\n\nHello.\n" > paper/main.md
 
-      - name: Build PDF with pandoc + wkhtmltopdf
+      - name: Build PDF (Markdown -> HTML -> wkhtmltopdf)
         shell: bash
         run: |
           set -e
           sudo apt-get update -y
           sudo apt-get install -y --no-install-recommends pandoc wkhtmltopdf
-          pandoc paper/main.md -o out/paper.pdf --pdf-engine=wkhtmltopdf
+          pandoc paper/main.md -t html5 -s -o out/paper.html
+          wkhtmltopdf --enable-local-file-access out/paper.html out/paper.pdf
           test -f out/paper.pdf
 
       - name: Upload paper.pdf
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: paper-pdf
