@@ -16,12 +16,13 @@ jobs:
           mkdir -p paper out
           [ -f paper/main.md ] || printf "# Canary\n\nHello.\n" > paper/main.md
 
-      - name: Build PDF with pandoc
+      - name: Build PDF with pandoc + wkhtmltopdf
         shell: bash
         run: |
+          set -e
           sudo apt-get update -y
-          sudo apt-get install -y --no-install-recommends pandoc
-          pandoc paper/main.md -o out/paper.pdf
+          sudo apt-get install -y --no-install-recommends pandoc wkhtmltopdf
+          pandoc paper/main.md -o out/paper.pdf --pdf-engine=wkhtmltopdf
           test -f out/paper.pdf
 
       - name: Upload paper.pdf
