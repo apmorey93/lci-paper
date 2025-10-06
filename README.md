@@ -58,3 +58,6 @@ date,provider,endpoint,price_per_token_usd,egress_usd_per_gb,source,url,notes
 ## License & citation
 - Code is MIT. See \LICENSE\.
 - Citation metadata in \CITATION.cff\.
+
+![Build Paper](https://github.com/apmorey93/lci-paper/actions/workflows/build_paper.yml/badge.svg)
+
