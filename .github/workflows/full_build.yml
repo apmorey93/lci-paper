@@ -7,6 +7,35 @@ jobs:
   full:
     runs-on: ubuntu-latest
     steps:
+
+        - name: Build paper (Guaranteed PDF)
+          shell: bash
+          run: |
+            set -e
+            mkdir -p out
+            # Prefer LaTeX if a main.tex is present
+            if [ -f paper/main.tex ]; then
+              sudo apt-get update -y
+              sudo apt-get install -y --no-install-recommends \
+                latexmk texlive-latex-recommended texlive-fonts-recommended texlive-latex-extra
+              latexmk -pdf -interaction=nonstopmode -halt-on-error -outdir=out paper/main.tex
+            # Else use Markdown with pandoc
+            else
+              sudo apt-get update -y
+              sudo apt-get install -y --no-install-recommends pandoc
+              SRC="paper/main.md"
+              [ -f "$SRC" ] || { echo "paper/main.md missing"; exit 1; }
+              pandoc "$SRC" -o out/paper.pdf
+            fi
+            test -f out/paper.pdf || { echo "No PDF produced at out/paper.pdf"; exit 1; }
+        - name: Upload paper.pdf
+          if: always()
+          uses: actions/upload-artifact@v4
+          with:
+            name: paper-pdf
+            path: out/paper.pdf
+            if-no-files-found: error
+            retention-days: 7
 
       - name: Checkout
         uses: actions/checkout@v4
@@ -114,6 +143,7 @@ jobs:
         **/*.pdf
       if-no-files-found: warn
       retention-days: 7
+
 
 
 
