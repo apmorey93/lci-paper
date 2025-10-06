@@ -1,12 +1,14 @@
-import os, json, sys, time, platform
+﻿import os, json, sys, time, platform
 from pathlib import Path
-Path('data/interim').mkdir(parents=True, exist_ok=True)
+
 import pandas as pd
+
+Path('data/interim').mkdir(parents=True, exist_ok=True)
 import numpy as np
 
 BASE = Path(__file__).resolve().parents[1]
 
-# QoS weights (priors) � adjust or grid in sensitivity analyses
+# QoS weights (priors) — adjust or grid in sensitivity analyses
 ETA_A = 2.0
 ETA_L = 0.5
 ETA_Q = 0.2
@@ -97,6 +99,8 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
 
 
 
