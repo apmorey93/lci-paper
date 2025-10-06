@@ -1,24 +1,62 @@
-﻿name: Build Paper (wkhtmltopdf)
+﻿name: Build Paper
+
 on:
   workflow_dispatch:
+    inputs:
+      note:
+        description: "Run note (optional)"
+        required: false
+        default: ""
+
 concurrency:
   group: build-paper-${{ github.ref }}
   cancel-in-progress: true
 
 permissions:
   contents: read
+
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-      - name: Run CI build script
+
+      - name: Show runner info
+        run: |
+          uname -a
+          lsb_release -a || true
+
+      - name: Install TeX Live (latexmk + packages)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            latexmk texlive-latex-recommended texlive-latex-extra \
+            texlive-fonts-recommended texlive-science texlive-pictures
+
+      - name: Ensure scripts executable and list tree
+        run: |
+          chmod +x scripts/*.sh || true
+          ls -la
+          ls -la scripts || true
+          ls -la paper || true
+
+      - name: Build tables
         shell: bash
-        run: bash scripts/ci_build.sh
-      - name: Upload artifacts
+        run: |
+          set -euxo pipefail
+          bash scripts/build_tables.sh
+
+      - name: Build LaTeX (latexmk)
+        shell: bash
+        run: |
+          set -euxo pipefail
+          mkdir -p out
+          kpsewhich tikz.sty || true
+          kpsewhich natbib.sty || true
+          latexmk -pdf -interaction=nonstopmode -halt-on-error -shell-escape -outdir=out paper/paper.tex
+          ls -l out || true
+
+      - name: Upload PDF and CSV artifacts
         if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -28,3 +66,14 @@ jobs:
             results/tables/*.csv
           if-no-files-found: warn
           retention-days: 7
+
+      - name: Upload LaTeX logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: latex-logs
+          path: |
+            out/*.log
+            out/*.fls
+            out/*.fdb_latexmk
+          if-no-files-found: warn
