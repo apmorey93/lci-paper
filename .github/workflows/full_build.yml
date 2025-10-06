@@ -1,6 +1,7 @@
-﻿name: LCI Full Build (PDF + Results)
+name: LCI Full Build (PDF + Results)
 
 on:
+  workflow_dispatch:
   push:
     branches: [ main ]
   pull_request:
@@ -56,3 +57,4 @@ jobs:
           results/tables/
           results/figures/
           results/pdf/
+

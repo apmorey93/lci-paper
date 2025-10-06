@@ -1,6 +1,7 @@
-﻿name: LCI Auto Build
+name: LCI Auto Build
 
 on:
+  workflow_dispatch:
   push:
     branches: [ main ]
   pull_request:
@@ -50,3 +51,4 @@ jobs:
         path: |
           results/tables/
           results/figures/
+
