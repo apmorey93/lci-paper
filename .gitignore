@@ -1,0 +1,22 @@
+﻿# Byte-compiled / cache
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# Virtual envs
+.venv/
+env/
+venv/
+
+# Data and outputs (keep generated tables/figures tracked)
+data/interim/
+results/*
+!results/tables/**
+!results/figures/**
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Jupyter
+.ipynb_checkpoints/

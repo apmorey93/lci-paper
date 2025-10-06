@@ -1,0 +1,30 @@
+﻿name: LCI Build
+on:
+  push: { branches: [ main, '**' ] }
+  pull_request: {}
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install --upgrade pip && pip install -r requirements.txt
+      - name: Ensure dirs & seed demo row if missing
+        run: |
+          mkdir -p data/interim results/tables results/figures
+          test -f data/interim/merged_inputs.csv || cat > data/interim/merged_inputs.csv <<'EOF'
+date,family,provider,model,region,a,p50_ms,p95_ms,q,s,tokens_per_sec,price_per_token_usd,ops_pct
+2025-09-15,QA,Demo,Model-X,us-east,0.78,300,700,0.999,0.99,120,1e-6,0.10
+EOF
+      - run: python src/lci_program.py
+      - run: python src/make_ipd.py
+      - run: python src/figures.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: results
+          path: |
+            results/tables/**
+            results/figures/**
+            results/meta.json
