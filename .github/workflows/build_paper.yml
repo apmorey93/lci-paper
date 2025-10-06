@@ -1,7 +1,12 @@
-name: Build Paper (wkhtmltopdf)
+﻿name: Build Paper (wkhtmltopdf)
 on:
   workflow_dispatch:
+concurrency:
+  group: build-paper-${{ github.ref }}
+  cancel-in-progress: true
 
+permissions:
+  contents: read
 jobs:
   build:
     runs-on: ubuntu-latest
