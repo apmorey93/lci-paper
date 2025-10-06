@@ -1,4 +1,4 @@
-name: LCI Full Build (PDF + Results)
+﻿name: LCI Full Build (PDF + Results)
 
 on:
   workflow_dispatch:
@@ -7,6 +7,7 @@ jobs:
   full:
     runs-on: ubuntu-latest
     steps:
+
       - name: Checkout
         uses: actions/checkout@v4
 
@@ -46,3 +47,16 @@ jobs:
             results/**
             paper/*.pdf
           if-no-files-found: warn
+  - name: Upload PDFs
+    if: always()
+    uses: actions/upload-artifact@v4
+    with:
+      name: pdfs
+      path: |
+        out/**/*.pdf
+        build/**/*.pdf
+        paper/**/*.pdf
+        **/*.pdf
+      if-no-files-found: warn
+      retention-days: 7
+
