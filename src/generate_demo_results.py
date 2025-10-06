@@ -1,19 +1,14 @@
-﻿# src/generate_demo_results.py
-from pathlib import Path
+﻿from pathlib import Path
 import pandas as pd
+import numpy as np
 
 ROOT = Path(__file__).resolve().parents[1]
 INTERIM = ROOT / "data" / "interim"
-RESULTS = ROOT / "results"
-TABLES = RESULTS / "tables"
-FIGS = RESULTS / "figures"
-
-for d in (TABLES, FIGS):
-    d.mkdir(parents=True, exist_ok=True)
+TABLES = (ROOT / "results" / "tables"); TABLES.mkdir(parents=True, exist_ok=True)
+FIGS   = (ROOT / "results" / "figures"); FIGS.mkdir(parents=True, exist_ok=True)
 
 merged = INTERIM / "merged_inputs.csv"
 if not merged.exists() or merged.stat().st_size < 10:
-    # Fallback demo rows if file empty
     df = pd.DataFrame([
         {"date":"2025-01-01","family":"QA","provider":"example","model":"example-A","region":"global",
          "a":0.80,"p50_ms":300,"p95_ms":450,"q":0.999,"s":0.999,"tokens_per_sec":0,
@@ -28,13 +23,10 @@ if not merged.exists() or merged.stat().st_size < 10:
 else:
     df = pd.read_csv(merged)
 
-# Simple quality map (toy): phi = a * (bar_l / max(p95, bar_l))**0.5
 BAR_L = 500.0
-import numpy as np
 phi = df["a"].clip(lower=1e-6) * (BAR_L / np.maximum(df["p95_ms"].astype(float).clip(lower=1.0), BAR_L))**0.5
-cost = df["price_per_token_usd"].astype(float).clip(lower=1e-9)
+cost = df["price_per_token_usd"].astype(float).clip(lower=1e-10)
 lci = (cost / phi).rename("LCI")
-
 df_calc = df.assign(phi=phi, LCI=lci)
 
 by_family = (df_calc.groupby("family", as_index=False)
@@ -42,38 +34,29 @@ by_family = (df_calc.groupby("family", as_index=False)
                   accuracy=("a","median"),
                   p95_ms=("p95_ms","median"),
                   price_per_token_usd=("price_per_token_usd","median"))
-            ).sort_values("LCI")
+             ).sort_values("LCI")
 
-# Write CSV tables the pipeline expects
-out_csv = TABLES / "lci_by_family.csv"
-by_family.to_csv(out_csv, index=False)
+(TABLES / "lci_by_family.csv").write_text(by_family.to_csv(index=False), encoding="utf-8")
+pd.DataFrame({"date":["2025-01-01","2025-06-01","2025-10-01"],"IPD":[1.00,0.94,0.91]}).to_csv(TABLES/"ipd.csv", index=False)
 
-ipd = pd.DataFrame({"date":["2025-01-01","2025-06-01","2025-10-01"],
-                    "IPD":[1.00,0.94,0.91]})
-ipd.to_csv(TABLES / "ipd.csv", index=False)
-
-# Minimal LaTeX for the paper build (booktabs-ready)
-tex = r"""
-\begin{table}[t]
-\centering
-\caption{LCI by Task Family (demo)}
-\label{tab:lci_by_family}
-\begin{tabular}{lrrrr}
-\toprule
-Family & LCI & Accuracy & p95 (ms) & Price/Token \\
-\midrule
-"""[1:]
-
-for _, r in by_family.iterrows():
-    tex += f"{r['family']} & {r['LCI']:.2e} & {r['accuracy']:.3f} & {r['p95_ms']:.0f} & {r['price_per_token_usd']:.2e} \\\\\n"
-
-tex += r"""\bottomrule
-\end{tabular}
-\end{table}
-"""
-
+tex = "\\n".join([
+    "\\\\begin{table}[t]",
+    "\\\\centering",
+    "\\\\caption{LCI by Task Family (demo)}",
+    "\\\\label{tab:lci_by_family}",
+    "\\\\begin{tabular}{lrrrr}",
+    "\\\\toprule",
+    "Family & LCI & Accuracy & p95 (ms) & Price/Token \\\\\\\\",
+    "\\\\midrule",
+] + [
+    f"{r['family']} & {r['LCI']:.2e} & {r['accuracy']:.3f} & {r['p95_ms']:.0f} & {r['price_per_token_usd']:.2e} \\\\\\\\"
+    for _, r in by_family.iterrows()
+] + [
+    "\\\\bottomrule",
+    "\\\\end{tabular}",
+    "\\\\end{table}",
+    ""
+])
 (TABLES / "lci_by_family.tex").write_text(tex, encoding="utf-8")
 
-print(f"Wrote: {out_csv}")
-print("Wrote: results/tables/ipd.csv")
-print("Wrote: results/tables/lci_by_family.tex")
+print("OK: generated results/tables/{lci_by_family.csv, ipd.csv, lci_by_family.tex}")

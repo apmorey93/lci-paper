@@ -1,4 +1,4 @@
-name: LCI Auto Build
+﻿name: LCI Auto Build
 
 on:
   workflow_dispatch:
@@ -34,6 +34,9 @@ jobs:
 
     - name: Run data integration
       run: |
+
+- name: Generate demo results (fallback)
+  run: python src/generate_demo_results.py
         source .venv/bin/activate
         python src/data_integration.py || echo "Integration failed, continuing with fallback"
 
@@ -51,4 +54,5 @@ jobs:
         path: |
           results/tables/
           results/figures/
+
 
