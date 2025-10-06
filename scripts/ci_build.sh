@@ -1,6 +1,8 @@
 ﻿#!/usr/bin/env bash
 set -euo pipefail
-echo "[CI] Install TeX Live (if needed handled in workflow)"
+echo "[ci_build] generating tables"
+bash scripts/build_tables.sh
+echo "[ci_build] building LaTeX"
 mkdir -p out
 latexmk -pdf -interaction=nonstopmode -halt-on-error -shell-escape -outdir=out paper/paper.tex
-echo "[CI] Built out/paper.pdf"
+ls -l out || true
