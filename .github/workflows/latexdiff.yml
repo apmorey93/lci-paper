@@ -14,13 +14,10 @@ jobs:
         uses: xu-cheng/latex-action@v3
         with:
           root_file: dummy.tex
-          pre_compile: echo "\\documentclass{article}\\begin{document}dummy\\end{document}" > dummy.tex
-      - name: Prepare build directory
-        run: |
-          mkdir -p build
-          chmod -R u+rw build
+          pre_compile: echo "\documentclass{article}\begin{document}dummy\end{document}" > dummy.tex
       - name: Generate latexdiff
         run: |
+          mkdir -p build
           git show origin/${{ github.base_ref }}:lci_paper.tex > /tmp/old.tex
           git show ${{ github.sha }}:lci_paper.tex > /tmp/new.tex
           latexdiff /tmp/old.tex /tmp/new.tex > build/lci_paper-diff.tex
