@@ -26,9 +26,9 @@
 \renewcommand{\topfraction}{0.90}
 \renewcommand{\bottomfraction}{0.80}
 \renewcommand{\floatpagefraction}{0.80}
-\setcounter{topnumber}{3}
-\setcounter{bottomnumber}{2}
-\setcounter{totalnumber}{4}
+\setcounter{\topnumber}{3}
+\setcounter{\bottomnumber}{2}
+\setcounter{\totalnumber}{4}
 \setlength{\textfloatsep}{10pt plus 2pt minus 2pt}
 \setlength{\floatsep}{8pt plus 2pt minus 2pt}
 \setlength{\intextsep}{8pt plus 2pt minus 2pt}
@@ -314,7 +314,7 @@ The measurement pipeline requires the following minimal tables, each row version
 Table & Key fields & Units & Purpose \\
 \midrule
 Energy prices & region, date, $c_E$ & \si{\cent\per\kilo\watt\hour} & Factor price \\
-Accelerator prices & SKU, region, date, $\$/hr$ & \si{\dollar\per\hour} & GPU/instance cost \\
+Accelerator prices & SKU, region, date, \$/hr & \si{\dollar\per\hour} & GPU/instance cost \\
 Network metrics & region$\to$region, p95 RTT & \si{\milliSecond} & Latency bounds \\
 Benchmarks & task family, item id, score & unitless (0--1) & Accuracy $a$ \\
 Reliability & service window, availability & fraction (0--1) & $q$ \\
