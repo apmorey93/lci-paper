@@ -1,0 +1,29 @@
+name: PR Latexdiff
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  latexdiff:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Install TeX
+        uses: xu-cheng/latex-action@v3
+        with:
+          root_file: dummy.tex
+          pre_compile: echo "\documentclass{article}\begin{document}dummy\end{document}" > dummy.tex
+      - name: Generate latexdiff
+        run: |
+          mkdir -p build
+          git show origin/${{ github.base_ref }}:lci_paper.tex > /tmp/old.tex
+          git show ${{ github.sha }}:lci_paper.tex > /tmp/new.tex
+          latexdiff /tmp/old.tex /tmp/new.tex > build/lci_paper-diff.tex
+          latexmk -pdf -silent build/lci_paper-diff.tex
+      - name: Upload diff artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: lci_paper-diff
+          path: build/lci_paper-diff.pdf
