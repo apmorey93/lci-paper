@@ -10,9 +10,10 @@ def plot_lci_scatter():
         print("[WARN] lci_by_family.csv not found.")
         return
     df = pd.read_csv(p)
+    x_col = "accuracy" if "accuracy" in df.columns else "a"
     for fam, df_f in df.groupby("family"):
         fig, ax = plt.subplots()
-        ax.scatter(df_f["a"], df_f["LCI"])
+        ax.scatter(df_f[x_col], df_f["LCI"])
         ax.set_title(f"LCI vs Accuracy — {fam}")
         ax.set_xlabel("Accuracy")
         ax.set_ylabel("LCI (USD per task-equivalent)")
