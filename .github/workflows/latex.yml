@@ -1,0 +1,31 @@
+name: Build LaTeX
+on:
+  push:
+    branches: [ "**" ]
+  pull_request:
+
+jobs:
+  latex:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: TeX Live cache
+        uses: actions/cache@v4
+        with:
+          path: /tmp/texlive
+          key: texlive-2025-09
+      - name: Compile PDF
+        uses: xu-cheng/latex-action@v3
+        with:
+          root_file: lci_paper.tex
+          latexmk_use_xelatex: false
+          extra_system_packages: chktex
+          pre_compile: |
+            mkdir -p build
+          post_compile: |
+            chktex -q -n1 -n8 -n36 lci_paper.tex || true
+      - name: Upload PDF artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: lci_paper-pdf
+          path: build/lci_paper.pdf
