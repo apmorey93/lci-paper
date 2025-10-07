@@ -1,26 +1,25 @@
-﻿# Byte-compiled / cache
-__pycache__/
-*.py[cod]
-*.egg-info/
-
-# Virtual envs
-.venv/
-env/
-venv/
-
-# Data and outputs (keep generated tables/figures tracked)
-data/interim/
-results/*
-!results/tables/**
-!results/figures/**
-
-# OS files
-.DS_Store
-Thumbs.db
-
-# Jupyter
-.ipynb_checkpoints/
-# Track CI-required file in otherwise ignored interim data
-!data/
-!data/interim/
-!data/interim/lci_by_family.csv
+# LaTeX cruft
+*.aux
+*.bbl
+*.blg
+*.bcf
+*.fdb_latexmk
+*.fls
+*.log
+*.out
+*.run.xml
+*.synctex.gz
+*.toc
+*.lof
+*.lot
+*.lol
+*.nav
+*.snm
+# PDFs and zips (we publish via Actions)
+*.pdf
+*.zip
+# Editors
+.vscode/
+.idea/
+# Build dir
+build/
