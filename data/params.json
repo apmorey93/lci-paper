@@ -1,0 +1,22 @@
+{
+  "_doc": "Parameters for LCI estimation. QoS weights and thresholds follow the paper; operational q,s are documented assumptions (no sourced per-model safety panel). Task token counts are documented assumptions.",
+  "qos_weights": {"a": 0.5, "l": 0.2, "q": 0.2, "s": 0.1},
+  "latency_softness_tau_ms": 1500,
+  "violation_budget_eps": 0.01,
+  "operational": {
+    "availability_q": 0.999,
+    "safety_s": 0.98,
+    "availability_target_qbar": 0.99,
+    "safety_target_sbar": 0.95,
+    "ops_overhead_factor": 1.15
+  },
+  "queue": {"k": 4, "batch_size": 16, "batch_timeout_ms": 0.0, "scv_arrival": 1.0, "scv_service": 1.0},
+  "families": {
+    "QA":        {"benchmark": "MMLU",      "accuracy_target_abar": 0.80, "out_tokens": 200, "in_tokens": 1000, "latency_target_ms": 8000},
+    "Code":      {"benchmark": "HumanEval", "accuracy_target_abar": 0.50, "out_tokens": 400, "in_tokens": 1500, "latency_target_ms": 16000},
+    "Reasoning": {"benchmark": "GSM8K",     "accuracy_target_abar": 0.70, "out_tokens": 300, "in_tokens": 800,  "latency_target_ms": 12000}
+  },
+  "energy_region": "us-east-1",
+  "u_grid": [0.40, 0.50, 0.60, 0.70, 0.78, 0.84, 0.88, 0.92, 0.95],
+  "sim": {"n_arrivals": 80000, "warmup": 12000, "replications": 6, "base_seed": 7}
+}

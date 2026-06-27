@@ -8,6 +8,8 @@
 \usepackage{siunitx}
 \usepackage{textcomp}
 \usepackage{graphicx}
+% Resolve figures whether latexmk runs from repo root or from paper/.
+\graphicspath{{results/figures/}{../results/figures/}{./}}
 \usepackage{threeparttable}
 \usepackage[round]{natbib}
 \usepackage{hyperref}
@@ -89,10 +91,11 @@ The framework quantifies architecture choices (RAG vs.\ scale) and shows how ene
 % ================= Abstract =================
 \noindent\textbf{Abstract}  
 
-\noindent We define the \emph{Locational Cost of Intelligence} (LCI): the dual cost of producing one task-equivalent unit of AI output at targeted accuracy, latency, reliability, and safety under a joint probabilistic constraint.  
-We formalize serving using GI/G/$k$ with processor sharing and batching, provide tractable surrogates for the chance constraint, and construct a chain Fisher \emph{Intelligence Price Deflator} (IPD).  
-A public-data calibration illustrates how retrieval depth substitutes for model scale and how transmission lowers LCI on both energy and latency margins.  
-This reframes AI’s macro impact as changes in the price of \emph{usable} intelligence.
+\noindent We define the \emph{Locational Cost of Intelligence} (LCI): the dual cost of producing one task-equivalent unit of AI output at targeted accuracy, latency, reliability, and safety under a joint probabilistic constraint.
+We show LCI is the ratio of operating cost to quality-adjusted throughput, $\LCI=C/(T\,\phi)$, hence \emph{U-shaped} in utilization---falling as fixed cost is spread over throughput, rising as QoS erodes near saturation.
+We formalize serving using GI/G/$k$ with processor sharing and batching, implemented as a discrete-event simulator that we \emph{validate against the closed-form M/M/$k$ Erlang-C} mean wait (worst-case error $<5\%$), and provide tractable surrogates for the chance constraint.
+Combining simulated latency/throughput with \emph{public, cited} inputs---cloud-GPU list prices, EIA energy tariffs, and published Llama-2/3/3.1-70B benchmark scores---we estimate LCI for three task families over 2023--2025 and chain them into a Fisher \emph{Intelligence Price Deflator} (IPD), which falls from 100 to $\approx$48 ($\sim$52\% cheaper usable intelligence); the wedge between public API market prices and the LCI frontier compresses from $\sim$40--50$\times$ to below $1\times$.
+\emph{Scope:} latency/throughput are simulated (the simulator is validated, not run on live GPUs); accuracy and prices are sourced; all numbers reproduce from public data.
 
 \vspace{0.3cm}
 \noindent\textbf{JEL Codes:} D24, L11, O33
@@ -159,30 +162,22 @@ Throughput $T$ follows a scale-with-utilization form:
 T = A_0\,H^{\beta_H} P^{\beta_P} W^{\beta_W} N^{\beta_N} O^{\beta_O}\cdot g(u),\quad
 g(u)=\left(1-\frac{u}{u_{\max}}\right)^{\gamma}.
 \end{equation}
-We use GI/G/$k$ with processor sharing and batching $(B,\tau_b)$.  
-Let $W_\alpha$ be the $\alpha$-quantile of response time.  
+We use GI/G/$k$ with processor sharing and batching $(B,\tau_b)$.
+Let $W_\alpha$ be the $\alpha$-quantile of response time.
 Heavy-traffic approximations imply $W_{0.95}(u)$ is convex near $u_{\max}$; we map $\ell=W_{0.95}$.
 
-% ============ Figure 2: Queueing throughput & convexity ============
+\paragraph{Cost identity and the U-shape.}
+With operating cost per unit time $C=\sum_j p_j x_j$ and quality-adjusted throughput $\QOU=T(u)\,\phi(u)$, the cost per usable task is
+\begin{equation}\label{eq:lci-identity}
+\LCI(u)=\frac{C}{T(u)\,\phi(u)}=\underbrace{\frac{C}{T(u)}}_{\text{raw \$/task}}\cdot\underbrace{\frac{1}{\phi(u)}}_{\text{quality markup}}.
+\end{equation}
+The raw cost $C/T(u)$ decreases in $u$ (fixed cost spread over throughput); the markup $1/\phi(u)$ increases in $u$ (latency erodes $\phi$). Their product is U-shaped, with an interior cost-minimizing utilization $u^\ast$; near $u_{\max}$ the markup dominates and $\LCI(u)$ rises convexly. Figure~\ref{fig:queue} reports the relationship as \emph{measured} by the validated simulator (\S\ref{sec:results}).
+
+% ============ Figure 2: Throughput & LCI vs utilization (simulator) ============
 \begin{figure}[t]
 \centering
-\begin{tikzpicture}[x=1cm,y=1cm,>=Latex]
-  % Axes
-  \draw[->] (0,0) -- (7.6,0) node[below right]{Utilization $u$};
-  \draw[->] (0,0) -- (0,4.6) node[above left]{Throughput / LCI};
-  % Throughput curve
-  \draw[thick,blue]
-    plot[smooth] coordinates {(0.5,3.8) (1.2,3.5) (2.0,3.0) (2.8,2.4) (3.6,1.8) (4.4,1.3) (5.2,0.9) (6.0,0.7) (6.8,0.6)};
-  \node[blue] at (1.3,3.95) {\scriptsize $T(u)$};
-  % LCI curve (convex near saturation)
-  \draw[thick,red]
-    plot[smooth] coordinates {(0.5,0.6) (1.3,0.7) (2.1,0.95) (2.9,1.35) (3.7,1.95) (4.5,2.8) (5.3,3.7) (6.1,4.2) (6.9,4.45)};
-  \node[red] at (4.9,3.6) {\scriptsize $\LCI(u)$};
-  % u_max marker
-  \draw[densely dashed] (6.5,0) -- (6.5,4.4);
-  \node[below] at (6.5,0) {\scriptsize $u_{\max}$};
-\end{tikzpicture}
-\caption{Serving class and operating point: $T(u)$ tapers while $\LCI(u)$ becomes convex near saturation due to tail-latency penalties.}
+\includegraphics[width=0.62\textwidth]{fig_throughput_LCI_vs_util.pdf}
+\caption{Throughput (normalized, increasing) and cost per quality-adjusted task $\LCI(u)$ vs.\ utilization, from the validated GI/G/$k$--PS+batching simulator (QA family, 2025 inputs). The interior minimum defines $u^\ast\approx0.88$.}
 \label{fig:queue}
 \end{figure}
 
@@ -245,45 +240,132 @@ Under GI/G/$k$–PS with batching $(B,\tau_b)$ and finite second moments, $W_{0.
 \end{figure}
 
 % ================= 4. Empirical Calibration =================
-\section{Empirical Calibration}
+\section{Empirical Calibration and Results}\label{sec:results}
+We instantiate the framework with a validated serving simulator and public,
+cited input data. \emph{What is measured vs.\ modeled:} latency and throughput
+come from a discrete-event simulation of the GI/G/$k$--PS+batching station (not
+from serving a live model on hardware); accuracy and prices are taken from
+published sources. Every figure and number below reproduces from the released
+code (\texttt{make results}); sources and access dates are in
+\texttt{data/external/} and \texttt{data/evals/}.
+
+\paragraph{Setup.}
+The simulator (\texttt{src/queueing\_ps\_batch.py}) models $k{=}4$ servers with
+server-side dynamic batching ($B{=}16$), Poisson arrivals, exponential service;
+per-request service time is $E[S]=\text{out\_tokens}/\text{decode\_rate}$, so a
+single normalized sweep rescales exactly to every (date, GPU, family). QoS
+weights $(\eta_a,\eta_\ell,\eta_q,\eta_s)=(0.5,0.2,0.2,0.1)$, softness
+$\tau{=}1500$\,ms; operational $q{=}0.999$, $s{=}0.98$ are documented assumptions.
+
+\paragraph{Simulator validation.}
+For the M/M/$k$ special case ($B{=}1$, exponential), the simulated mean wait
+matches Erlang-C across $k\in\{1,2,4,8\}$, $u\in\{0.5,0.7,0.85,0.95\}$ with
+worst-case relative error $4.8\%$ (Figure~\ref{fig:validation}).
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.5\textwidth]{fig_queue_validation.pdf}
+\caption{Validation: simulated vs.\ Erlang-C analytic mean wait (M/M/$k$); points on the $45^\circ$ line, worst-case error $<5\%$.}
+\label{fig:validation}
+\end{figure}
 
 \begin{table}[t]
 \centering
 \begin{threeparttable}
-\caption{Empirical primitives (latest available at collection time)}
+\caption{Public, cited input primitives (excerpt).}
 \label{tab:empirical}
 \begin{tabular}{l l l l}
 \toprule
-Category & Region / Item & Value & Source \\
+Category & Item & Value & Source \\
 \midrule
-Industrial electricity & Virginia (US) & 9.49~\si{\cent\per\kilo\watt\hour} & EIA Table 5.6.A \\
-Industrial electricity & Texas (US) & 6.60~\si{\cent\per\kilo\watt\hour} & EIA Table 5.6.A \\
-GPU (H100) price & p5.4xlarge & \$3.93 / accelerator-hour & Cloud price list \\
-GPU (8$\times$H100) & p5.48xlarge & \$31.46 / instance-hour & Cloud price list \\
-Retrieval (reads) & Vector DB (reads) & \$16 / 1M read units & Provider pricing \\
-Retrieval (storage) & Vector DB (storage) & \$0.095 / 1M dims·month & Provider pricing \\
-Inter-region latency & us-east-1$\to$eu-west-1 & 70–90~\si{\milliSecond} & Public measurements \\
+Industrial electricity & us-east-1 (industrial) & \$0.080 / \si{\kilo\watt\hour} & EIA, 2024 \\
+GPU rental (A100-40GB) & p4d.24xlarge, /8 & \$4.10$\to$\$2.75 / GPU-hr (2023$\to$2025) & AWS list (Vantage) \\
+GPU rental (H100-80GB) & p5.48xlarge, /8 & \$12.29$\to$\$6.88 / GPU-hr (2023$\to$2025) & AWS list \\
+Accuracy (QA/MMLU) & Llama-2/3/3.1-70B & 0.689 / 0.795 / 0.860 & Meta releases \\
+Accuracy (Code/HumanEval) & Llama-2/3/3.1-70B & 0.299 / 0.817 / 0.805 & Meta releases \\
+Market price (PUI) & GPT-4 $\to$ GPT-4o-mini & \$200 $\to$ \$0.60 / 1M out-tok & OpenAI list \\
 \bottomrule
 \end{tabular}
+\begin{tablenotes}[flushleft]
+\item \emph{Note:} Full tables with URLs and access dates in \texttt{data/external/hardware.csv}, \texttt{energy\_prices.csv}, \texttt{api\_prices.csv}, and \texttt{data/evals/accuracy.csv}.
+\end{tablenotes}
 \end{threeparttable}
 \end{table}
 
-% ============ Figure 4: IPD trend (stylized) ============
+\paragraph{LCI estimates.}
+Across families $\LCI(u)$ is U-shaped with interior minimizer $u^\ast\approx0.88$
+(Figure~\ref{fig:lcicurve}); the reported LCI is the minimum over GPU options
+(the cost frontier). Table~\ref{tab:lci} reports the levels; all three families
+decline monotonically over 2023--2025.
+
 \begin{figure}[t]
 \centering
-\begin{tikzpicture}[x=1cm,y=1cm]
-  \draw[->] (0,0) -- (9.2,0) node[below right]{Time};
-  \draw[->] (0,0) -- (0,5.0) node[above left]{Index (2024Q1=100)};
-  % Virginia
-  \draw[thick,blue] plot[smooth] coordinates {(0.8,4.5) (2.0,4.2) (3.2,3.9) (4.4,3.6) (5.6,3.4) (6.8,3.2) (8.0,3.1)};
-  \node[blue] at (7.2,3.35) {\scriptsize Virginia};
-  % Singapore
-  \draw[thick,red] plot[smooth] coordinates {(0.8,4.5) (2.0,4.4) (3.2,4.35) (4.4,4.3) (5.6,4.35) (6.8,4.45) (8.0,4.55)};
-  \node[red] at (7.2,4.6) {\scriptsize Singapore};
-\end{tikzpicture}
-\caption{Illustrative IPD series: regions with cheaper energy/transmission exhibit faster declines in the price of usable intelligence.}
+\includegraphics[width=0.58\textwidth]{fig_LCI_curve.pdf}
+\caption{Estimated $\LCI(u)$ by task family (2025 inputs); markers denote $u^\ast$.}
+\label{fig:lcicurve}
+\end{figure}
+
+\begin{table}[t]
+\centering
+\begin{threeparttable}
+\caption{Estimated LCI by task family ($\times10^{-3}$ USD per quality-adjusted task), frontier at $u^\ast$.}
+\label{tab:lci}
+\begin{tabular}{l cccc}
+\toprule
+Family & 2023Q3 & 2024Q2 & 2024Q3 & 2025Q2 \\
+\midrule
+QA (MMLU)         & 1.28 & 1.08 & 1.02 & 0.65 \\
+Code (HumanEval)  & 3.08 & 2.14 & 2.04 & 1.31 \\
+Reasoning (GSM8K) & 1.98 & 1.61 & 1.53 & 0.98 \\
+\bottomrule
+\end{tabular}
+\begin{tablenotes}[flushleft]
+\item \emph{Note:} Self-hosted Llama-70B frontier; latency/throughput simulated, prices/accuracy sourced. Per-row detail in \texttt{results/tables/lci\_by\_family.csv}.
+\end{tablenotes}
+\end{threeparttable}
+\end{table}
+
+\paragraph{The market wedge.}
+Comparing the LCI frontier with public API list prices (PUI), the wedge
+$\text{PUI}/\LCI$ falls from $\sim$40--50$\times$ in 2023 (GPT-4-era) to below
+$1\times$ by mid-2024 (Figure~\ref{fig:wedge}): hosted commodity tiers
+(e.g.\ GPT-4o-mini) undercut a self-hosted 70B frontier. LCI is thus a floor
+\emph{given} a model/serving configuration, not an absolute cross-provider bound.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.58\textwidth]{fig_wedge.pdf}
+\caption{Market price (PUI) vs.\ the LCI cost frontier over time (log scale); the wedge compresses from $\sim$40--50$\times$ to below $1\times$.}
+\label{fig:wedge}
+\end{figure}
+
+% ============ Figure 4: IPD trend (from data) ============
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.62\textwidth]{fig_IPD.pdf}
+\caption{Estimated IPD (chain Fisher, equal weights), base $=100$ at 2023Q3, with Laspeyres/Paasche bounds (Table~\ref{tab:ipd}). The index falls to $\approx$48 by 2025Q2.}
 \label{fig:ipd}
 \end{figure}
+
+\begin{table}[t]
+\centering
+\begin{threeparttable}
+\caption{Intelligence Price Deflator (chain Fisher, base $=100$ at 2023Q3).}
+\label{tab:ipd}
+\begin{tabular}{l cccc}
+\toprule
+ & 2023Q3 & 2024Q2 & 2024Q3 & 2025Q2 \\
+\midrule
+Fisher (IPD) & 100.0 & 78.0 & 74.2 & 47.6 \\
+Laspeyres    & 100.0 & 78.2 & 74.4 & 47.7 \\
+Paasche      & 100.0 & 77.7 & 73.9 & 47.4 \\
+\bottomrule
+\end{tabular}
+\begin{tablenotes}[flushleft]
+\item \emph{Note:} Equal expenditure weights; Fisher lies between the bounds by construction.
+\end{tablenotes}
+\end{threeparttable}
+\end{table}
 
 % ================= 5. Intelligence Price Deflator =================
 \section{Intelligence Price Deflator (IPD)}

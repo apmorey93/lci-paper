@@ -1,0 +1,5 @@
+date,region,sector,price_usd_per_kwh,source,url,accessed,notes
+2024-01-01,us-east-1,industrial,0.080,EIA Electric Sales Revenue and Average Price (2024 Table 4),https://www.eia.gov/electricity/sales_revenue_price/,2026-06-27,"Representative South Atlantic industrial rate (~8 c/kWh)."
+2024-01-01,us-national,industrial,0.081,EIA Electric Power Annual 2024,https://www.eia.gov/electricity/sales_revenue_price/,2026-06-27,"US industrial average."
+2024-01-01,us-west-2,industrial,0.075,EIA 2024 (Pacific NW representative),https://www.eia.gov/electricity/state/,2026-06-27,"Low-cost hydro region."
+2024-01-01,us-tx,industrial,0.061,EIA 2024 West South Central industrial,https://www.eia.gov/electricity/sales_revenue_price/,2026-06-27,"Texas industrial ~6.1 c/kWh."

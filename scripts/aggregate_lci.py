@@ -1,23 +1,18 @@
-﻿#!/usr/bin/env python3
-import pandas as pd, argparse
-p = argparse.ArgumentParser()
-p.add_argument("--accuracy", required=True)
-p.add_argument("--latency", required=True)
-p.add_argument("--out", required=True)
-a = p.parse_args()
+#!/usr/bin/env python3
+"""DEPRECATED CI stub.
 
-acc = pd.read_csv(a.accuracy)
-lat = pd.read_csv(a.latency)
-if acc.empty or lat.empty:
-    # write a harmless stub so CI still builds
-    pd.DataFrame([{"family":"Stub","lci":0,"source":"empty","n":0}]).to_csv(a.out,index=False)
-    raise SystemExit(0)
+The real LCI computation now lives in ``src/lci_program.py`` (cost frontier from
+the validated queueing simulator + sourced public prices/benchmarks). This file
+previously emitted a placeholder ``acc/(1+lat)`` formula that is NOT the LCI used
+in the paper; it is retained only so legacy CI invocations fail loudly rather
+than silently producing a misleading number.
+"""
 
-acc_g = acc.groupby("family")["value"].mean().rename("acc_mean")
-lat_g = lat.groupby("family")["latency_ms_p50"].median().rename("lat_p50")
-df = acc_g.to_frame().join(lat_g, how="inner")
-df["lci"] = df["acc_mean"] / (1.0 + df["lat_p50"]/1000.0)  # placeholder formula
-df["source"] = "ci"
-df["n"] = 1
-df.reset_index().to_csv(a.out, index=False)
-print(f"Wrote {a.out}")
+import sys
+
+if __name__ == "__main__":
+    sys.stderr.write(
+        "aggregate_lci.py is deprecated. Run the real pipeline instead:\n"
+        "  make results   (or: cd src && python lci_program.py && python make_ipd.py)\n"
+    )
+    sys.exit(1)

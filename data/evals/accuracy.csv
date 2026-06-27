@@ -1,0 +1,13 @@
+date,model,family,benchmark,score_pct,shots,source,url,accessed,notes
+2023-07-01,Llama-2-70B,QA,MMLU,68.9,5-shot,Meta Llama 2 / public benchmark panels,https://patmcguinness.substack.com/p/llama-31-405b-70b-and-8b-released,2026-06-27,"Knowledge/QA family mapped to MMLU."
+2023-07-01,Llama-2-70B,Code,HumanEval,29.9,pass@1,Meta Llama 2 / public benchmark panels,https://patmcguinness.substack.com/p/llama-31-405b-70b-and-8b-released,2026-06-27,"Code family mapped to HumanEval pass@1."
+2023-07-01,Llama-2-70B,Reasoning,GSM8K,56.8,8-shot,Meta Llama 2 / public benchmark panels,https://patmcguinness.substack.com/p/llama-31-405b-70b-and-8b-released,2026-06-27,"Reasoning family mapped to GSM8K."
+2024-04-01,Llama-3-70B,QA,MMLU,79.5,5-shot,Meta Llama 3 release,https://chatforest.com/reviews/meta-llama-3-8b-70b-open-weight-llm-review/,2026-06-27,""
+2024-04-01,Llama-3-70B,Code,HumanEval,81.7,pass@1,Meta Llama 3 release,https://chatforest.com/reviews/meta-llama-3-8b-70b-open-weight-llm-review/,2026-06-27,""
+2024-04-01,Llama-3-70B,Reasoning,GSM8K,93.0,8-shot,Meta Llama 3 release,https://chatforest.com/reviews/meta-llama-3-8b-70b-open-weight-llm-review/,2026-06-27,""
+2024-07-01,Llama-3.1-70B,QA,MMLU,86.0,0-shot CoT,Meta Llama 3.1 release,https://www.llama.com/llama3_1/,2026-06-27,"Meta-reported; 5-shot post-trained ~84."
+2024-07-01,Llama-3.1-70B,Code,HumanEval,80.5,pass@1,Meta Llama 3.1 release,https://www.llama.com/llama3_1/,2026-06-27,""
+2024-07-01,Llama-3.1-70B,Reasoning,GSM8K,95.1,8-shot CoT,Meta Llama 3.1 release,https://www.llama.com/llama3_1/,2026-06-27,""
+2025-06-01,Llama-3.1-70B,QA,MMLU,86.0,0-shot CoT,Meta Llama 3.1 (same weights),https://www.llama.com/llama3_1/,2026-06-27,"2025 period isolates cost-side change (price cut + faster serving)."
+2025-06-01,Llama-3.1-70B,Code,HumanEval,80.5,pass@1,Meta Llama 3.1 (same weights),https://www.llama.com/llama3_1/,2026-06-27,""
+2025-06-01,Llama-3.1-70B,Reasoning,GSM8K,95.1,8-shot CoT,Meta Llama 3.1 (same weights),https://www.llama.com/llama3_1/,2026-06-27,""

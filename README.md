@@ -1,63 +1,87 @@
-﻿# LCI Paper: Public Calibration & IPD
+# LCI Paper: Locational Cost of Intelligence & the Intelligence Price Deflator
 
-This repository contains code and data schemas to compute **Locational Cost of Intelligence (LCI)** for several task families using **public inputs** and to aggregate them into a provisional **Intelligence Price Deflator (IPD)**.
+This repository computes the **Locational Cost of Intelligence (LCI)** — the
+minimum cost of one quality-adjusted task-equivalent of usable AI output under
+quality-of-service (QoS) constraints — and chains it over time into an
+**Intelligence Price Deflator (IPD)**.
 
-- Paper: *Pricing Usable Intelligence: A Location-Adjusted Cost Function with QoS Chance Constraints*
-- Author: **Aditya Morey** (ORCID: https://orcid.org/0009-0000-2864-4586) — <adityamorey1723@gmail.com>
+- Author: **Aditya Morey** (ORCID: https://orcid.org/0009-0000-2864-4586)
+- Paper source: `lci_paper.tex` (build with `make pdf`).
 
-## What this repo provides
-- \src/lci_program.py\ — computes QOU and LCI from public inputs.
-- \src/make_ipd.py\ — builds a chain Fisher IPD across task families.
-- \src/queueing_ps_batch.py\ — GI/G/k-PS batching approximation (p95 latency; convexity).
-- \src/figures.py\ — produces paper figures from computed outputs.
-- Data schemas under \data/\ for accuracy, latency, energy, and cloud prices.
+## What is real here (and what is modelled)
 
-All computations rely on **public datasets** (e.g., energy prices, cloud list prices, published benchmarks, light latency/accuracy probes). No proprietary data are required.
+Every number in the paper traces to one of two honest sources:
 
-## Quick start
-\\\ash
-python -m venv .venv && source .venv/bin/activate    # Windows: .venv\\Scripts\\activate
+1. **A validated discrete-event simulator** (`src/queueing_ps_batch.py`) of a
+   `GI/G/k` processor-sharing station with server-side dynamic batching. It is
+   **validated against the closed-form M/M/k Erlang-C** mean waiting time in
+   `src/validate_queue.py` (worst-case error < 5% across `k∈{1,2,4,8}`,
+   `u∈{0.5…0.95}`; see `results/tables/queue_validation.csv`). Latency (p95) and
+   throughput vs. utilisation come from this simulator, not from a hand-chosen
+   formula.
+2. **Public, cited input data** under `data/` — cloud GPU list prices, EIA
+   industrial energy prices, published LLM benchmark scores, and public LLM API
+   list prices. Every row carries a `source`, `url`, and `accessed` date.
+
+We do **not** claim to have served a live LLM on a GPU. Latency/throughput are
+*simulated* (clearly labelled); accuracy and prices are *sourced*. If you have
+real serving traces, drop them into `data/evals/latency_schema.csv` and the
+pipeline will consume them.
+
+## Pipeline
+
+```bash
+python -m venv .venv && source .venv/bin/activate   # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
+make results     # validate -> integrate -> LCI -> IPD -> figures
+make test        # unit tests (chain Fisher / IPD bounds)
+make pdf         # build the paper
+```
 
-# 1) Place public CSVs in data/external and data/evals (see schemas below).
-# 2) Optionally edit data/interim/merged_inputs.csv (a demo row is seeded).
-# 3) Compute LCI, then IPD, then figures:
-python src/lci_program.py
-python src/make_ipd.py
-python src/figures.py
-\\\
+Stage by stage:
 
-Outputs go to \esults/tables\ and \esults/figures\. A metadata file \esults/meta.json\ records environment details.
+| Step | Script | Output |
+|------|--------|--------|
+| Validate simulator vs Erlang-C | `src/validate_queue.py` | `results/tables/queue_validation.csv` |
+| Merge public inputs | `src/data_integration.py` | `data/interim/merged_inputs.csv` |
+| Compute LCI(u), u\*, frontier, wedge | `src/lci_program.py` | `results/tables/lci_by_family.csv`, `lci_curves.csv` |
+| Chain Fisher IPD (+ Laspeyres/Paasche bounds) | `src/make_ipd.py` | `results/tables/ipd.csv`, `results/figures/fig_IPD.pdf` |
+| Paper figures | `src/figures.py` | `results/figures/*.pdf` |
 
-## Data schemas (CSV)
-**Accuracy (per family x model x region x date)** — \data/evals/accuracy_schema.csv\ header:
-\\\
-date,family,provider,model,region,metric,value,N,source,url,notes
-\\\
+## Method summary
 
-**Latency (p95) probes** — \data/evals/latency_schema.csv\ header:
-\\\
-date,provider,model,region,p50_ms,p95_ms,N,window_start,window_end,method,notes
-\\\
+For each `(date, task family)` and each GPU option available that date, set the
+per-request service time `E[S] = out_tokens / decode_rate`, rescale the single
+normalised simulation sweep, and compute
 
-**Energy prices** — \data/external/energy_prices_schema.csv\ header:
-\\\
-date,region,price_usd_per_kwh,source,url,notes
-\\\
+```
+LCI(u) = raw_cost(u) / phi(u),     raw_cost = (GPU + energy) * overhead
+phi    = alpha(a)^wa * lambda(l)^wl * rho(q)^wq * sigma(s)^ws   (paper Eq. 5)
+```
 
-**Cloud prices** — \data/external/cloud_prices_schema.csv\ header:
-\\\
-date,provider,endpoint,price_per_token_usd,egress_usd_per_gb,source,url,notes
-\\\
+`raw_cost(u)` falls with utilisation (cost spread over throughput) while
+`1/phi(u)` rises (latency erodes quality), so `LCI(u)` is **U-shaped** with an
+interior cost-minimising utilisation `u*`. The reported LCI per `(date, family)`
+is the **minimum over GPU options** — the cost frontier. The market price (PUI)
+comes from public API list prices; the wedge is `PUI / LCI`.
+
+## Data inputs (all public, cited)
+
+- `data/external/hardware.csv` — GPU list prices (AWS p4d/p5), TDP, decode rates.
+- `data/external/energy_prices.csv` — EIA industrial electricity prices.
+- `data/external/api_prices.csv` — public LLM API list prices (for PUI).
+- `data/evals/accuracy.csv` — published Llama-2/3/3.1-70B benchmark scores.
+- `data/params.json` — QoS weights, thresholds, task token counts, queue config.
 
 ## Reproducibility
-- Deterministic seeds when simulating.
-- \esults/meta.json\ captures versions and timestamps.
-- All inputs are public; list and link sources in the CSVs.
+
+- Deterministic seeds throughout; `results/meta.json` records versions, platform,
+  parameters, and timestamps.
+- `make results` regenerates every table and figure from the CSVs.
+- Headline result: the IPD falls from 100 (2023-07) to ≈48 (2025-06) — a ~52%
+  decline in the quality-adjusted cost of intelligence — driven by sourced GPU
+  price cuts, faster decoding, and benchmark-accuracy gains.
 
 ## License & citation
-- Code is MIT. See \LICENSE\.
-- Citation metadata in \CITATION.cff\.
 
-![Build Paper](https://github.com/apmorey93/lci-paper/actions/workflows/build_paper.yml/badge.svg)
-
+- Code is MIT (`LICENSE`). Citation metadata in `CITATION.cff`.

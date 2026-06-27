@@ -1,2 +1,8 @@
+# Ignore transient results by default, but TRACK the figures and tables that the
+# paper includes / cites (these override the root *.pdf rule for this subtree).
 *
 !.gitignore
+!figures
+!figures/**
+!tables
+!tables/**

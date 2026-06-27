@@ -7,9 +7,24 @@ PYTHON ?= python3
 FALLBACK ?= $(PYTHON) scripts/fallback_pdf.py
 FALLBACK_DIFF ?= $(PYTHON) scripts/fallback_latexdiff.py
 
-.PHONY: all pdf clean clobber diff lint
+.PHONY: all pdf results validate test clean clobber diff lint
 
-all: pdf
+all: results pdf
+
+# Reproduce every number and figure used in the paper, from public inputs.
+results:
+	cd src && $(PYTHON) validate_queue.py
+	cd src && $(PYTHON) data_integration.py
+	cd src && $(PYTHON) lci_program.py
+	cd src && $(PYTHON) make_ipd.py
+	cd src && $(PYTHON) figures.py
+	@echo "Results -> results/tables ; figures -> results/figures"
+
+validate:
+	cd src && $(PYTHON) validate_queue.py
+
+test:
+	$(PYTHON) -m pytest tests/ -q
 
 pdf:
 	latexmk -pdf -silent $(DOC).tex

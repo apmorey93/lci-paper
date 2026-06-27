@@ -1,0 +1,8 @@
+date,gpu,instance,provider,gpus_per_instance,price_usd_per_hr_instance,price_usd_per_gpu_hr,tdp_w_per_gpu,decode_tok_per_s_per_gpu_70b_fp16,region,source,url,accessed,notes
+2023-07-01,A100-40GB,p4d.24xlarge,AWS,8,32.77,4.10,400,22,us-east-1,AWS EC2 On-Demand (2023 list via Vantage),https://instances.vantage.sh/aws/ec2/p4d.24xlarge,2026-06-27,"2023 list ~$32.77/hr; per-GPU = /8. Decode tok/s representative, 70B FP16."
+2024-04-01,H100-80GB,p5.48xlarge,AWS,8,98.32,12.29,700,35,us-east-1,AWS EC2 On-Demand (p5 launch list),https://www.spheron.network/blog/aws-h100-pricing-2026/,2026-06-27,"p5 launch on-demand ~$98.32/hr; decode improved on Hopper."
+2024-04-01,A100-40GB,p4d.24xlarge,AWS,8,32.77,4.10,400,24,us-east-1,AWS EC2 On-Demand,https://instances.vantage.sh/aws/ec2/p4d.24xlarge,2026-06-27,"A100 still available as cost option."
+2024-07-01,H100-80GB,p5.48xlarge,AWS,8,98.32,12.29,700,40,us-east-1,AWS EC2 On-Demand (pre-2025 cut),https://www.spheron.network/blog/aws-h100-pricing-2026/,2026-06-27,"Software gains (vLLM v0.6, ~2.7x) raise effective decode."
+2024-07-01,A100-40GB,p4d.24xlarge,AWS,8,32.77,4.10,400,25,us-east-1,AWS EC2 On-Demand,https://instances.vantage.sh/aws/ec2/p4d.24xlarge,2026-06-27,"A100 cost option in 2024."
+2025-06-01,H100-80GB,p5.48xlarge,AWS,8,55.04,6.88,700,50,us-east-1,AWS EC2 On-Demand (post June-2025 -44% cut),https://www.spheron.network/blog/aws-h100-pricing-2026/,2026-06-27,"AWS cut P5 prices 44% in June 2025; $6.88/GPU-hr."
+2025-06-01,A100-40GB,p4d.24xlarge,AWS,8,21.96,2.745,400,26,us-east-1,AWS EC2 On-Demand (current via Vantage),https://instances.vantage.sh/aws/ec2/p4d.24xlarge,2026-06-27,"A100 on-demand fell to ~$21.96/hr."

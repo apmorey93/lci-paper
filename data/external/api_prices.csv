@@ -1,0 +1,6 @@
+date,provider,model,price_in_usd_per_1m_tok,price_out_usd_per_1m_tok,source,url,accessed,notes
+2023-07-01,OpenAI,gpt-4,25.0,200.0,OpenAI API pricing history,https://www.silicondata.com/use-cases/openai-api-pricing-per-1m-tokens,2026-06-27,"GPT-4 launch (Mar 2023) input $25 / output $200 per 1M tok."
+2024-04-01,OpenAI,gpt-4-turbo,10.0,30.0,OpenAI API pricing history,https://www.silicondata.com/use-cases/openai-api-pricing-per-1m-tokens,2026-06-27,"GPT-4 Turbo era."
+2024-05-01,OpenAI,gpt-4o,2.50,10.0,OpenAI GPT-4o release,https://developers.openai.com/api/docs/pricing,2026-06-27,"GPT-4o (May 2024) $2.50/$10."
+2024-07-01,OpenAI,gpt-4o-mini,0.15,0.60,OpenAI GPT-4o-mini release,https://pricepertoken.com/pricing-page/model/openai-gpt-4o-mini,2026-06-27,"GPT-4o-mini (Jul 2024) $0.15/$0.60."
+2025-06-01,OpenAI,gpt-4o,2.50,10.0,OpenAI API pricing,https://developers.openai.com/api/docs/pricing,2026-06-27,"Frontier-tier list price held; mini tier cheaper."

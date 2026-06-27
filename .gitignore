@@ -23,3 +23,7 @@
 .idea/
 # Build dir
 build/
+# Python
+__pycache__/
+*.pyc
+.venv/
