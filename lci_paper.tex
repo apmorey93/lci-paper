@@ -20,6 +20,7 @@
 \clubpenalty=10000
 \widowpenalty=10000
 \displaywidowpenalty=10000
+\setlength{\emergencystretch}{2em}  % reduce overfull boxes for clean typeset
 
 % Float & spacing balance (journal-level tuning)
 \renewcommand{\textfraction}{0.10}
@@ -137,7 +138,7 @@
 Economic measurement should price what firms purchase and deploy: \emph{usable, quality-guaranteed completions}, not raw tokens or GPU-hours. We define the \emph{Locational Cost of Intelligence} (LCI) as the minimum cost, conditional on location-specific factor prices, to produce one task--equivalent unit of AI output at pre-specified QoS thresholds. LCI is task-family specific, QoS-constrained, and location-aware.
 
 \paragraph{Positioning.}
-Hedonic methods price quality-adjusted IT capital \citep{Triplett1989,Pakes2003,Byrne2017}. LCI extends this approach to AI services by integrating accuracy, latency, reliability, and safety into a single supply-side cost object. The resulting index is designed for aggregation and macro analysis.
+Hedonic methods price quality-adjusted IT capital \citep{Triplett1989,Pakes2003}, and the deflator tradition extends this to computing and the information economy \citep{Nordhaus2007,JorgensonStiroh2000}. LCI extends this approach to AI \emph{services} by integrating accuracy, latency, reliability, and safety into a single supply-side cost object. The resulting index is designed for aggregation and macro analysis, and speaks to the AI/productivity-measurement debate \citep{Brynjolfsson2019,Acemoglu2018,Syverson2017,Byrne2016}.
 
 \paragraph{Interpretation.}
 LCI is a \emph{cost} (supply) object, not a market \emph{price}. Its derivatives with respect to input prices recover optimal input demands (Shephard's lemma). Equilibrium prices may differ; LCI isolates the technological cost frontier relevant for productivity accounting.
@@ -190,7 +191,7 @@ T(u) = \underbrace{A_0\,H^{\beta_H} P^{\beta_P} W^{\beta_W} N^{\beta_N} O^{\beta
 so realized throughput \emph{increases} with $u$ (more load served per unit time) up to the practical saturation $u_{\max}$. The congestion that accompanies high load is carried by the latency map below (and hence by $\phi$), not by throughput; this is what the validated simulator measures.
 
 \paragraph{Queueing model class.}
-Serving follows GI/G/$k$ with processor sharing (PS) and micro-batching of target size $B\ge1$ under admission timeout $\tau_b$. Let $W_\alpha$ denote the $\alpha$-quantile of response time. We map utilization to latency via $\ell = W_{0.95}(u;B,\tau_b)$ using heavy-traffic approximations valid for many-server regimes.
+Serving follows GI/G/$k$ with processor sharing (PS) and micro-batching of target size $B\ge1$ under admission timeout $\tau_b$. Let $W_\alpha$ denote the $\alpha$-quantile of response time. We map utilization to latency via $\ell = W_{0.95}(u;B,\tau_b)$ using heavy-traffic approximations valid for many-server regimes \citep{HalfinWhitt1981,Whitt2002,HarcholBalter2013}; tail-latency amplification at scale is well documented in production systems \citep{DeanBarroso2013,Gunther2010}.
 
 \paragraph{Cost identity and the operating point.}
 With operating cost per unit time $C=\sum_j p_j x_j$ and quality-adjusted throughput $\QOU=T(u)\,\phi(u)$, the cost per usable task at utilization $u$ is
@@ -208,7 +209,7 @@ The raw cost $C/T(u)$ \emph{decreases} in $u$ (a fixed resource bill is spread o
 \end{figure}
 
 \paragraph{Accuracy from scale and retrieval.}
-Empirical scaling motivates a saturating reduced form:
+Neural scaling laws \citep{Hoffmann2022,Sevilla2022} and retrieval augmentation \citep{Lewis2020,Karpukhin2020,IzacardGrave2021} motivate a saturating reduced form for accuracy:
 \begin{equation}\label{eq:acc}
 a
 = 1-\exp\!\Big[-\big(\theta_m m^{\zeta_m}+\theta_R R^{\zeta_R}+\theta_{mR} m^{\zeta_m}R^{\zeta_R}+\theta_Z Z\big)\Big],
@@ -363,7 +364,7 @@ p95 latency $W_{0.95}(u)$ & simulated & validated DES \\
 
 % ================= 7. Intelligence Price Deflator =================
 \section{Aggregation: The Intelligence Price Deflator (IPD)}
-Let $\{\mathcal T_k\}$ denote task families with expenditure shares $s_{k,t}$ at time $t$. The national LCI index is a chain Fisher across families:
+Let $\{\mathcal T_k\}$ denote task families with expenditure shares $s_{k,t}$ at time $t$. We aggregate using a chain Fisher index---a superlative index that is exact for a flexible aggregator and lies between its Laspeyres and Paasche bounds \citep{Diewert1976,Feenstra1994}:
 \begin{equation}
 \IPD_t
 = \prod_{\tau=1}^{t}\sqrt{
@@ -507,23 +508,83 @@ providers.
 
 % ================= 8. Limitations =================
 \section{Scope and Limitations}
-LCI is a supply-side cost frontier. It does not incorporate demand elasticities or market power. QoS weights are policy or application parameters and must be predeclared. Multi-tenancy is costed via capacity reservations. Dependencies among QoS margins are handled conservatively by Bonferroni or CVaR surrogates. Real systems include multi-stage pipelines, heterogeneous pools, and dynamic load balancing; empirical mapping from utilization to p95 latency should be validated against telemetry.
+LCI is a supply-side cost frontier. It does not incorporate demand elasticities or market power. QoS weights are policy or application parameters and must be predeclared. Multi-tenancy is costed via capacity reservations. Dependencies among QoS margins are handled conservatively by Bonferroni or CVaR surrogates. Real systems include multi-stage pipelines, heterogeneous pools, and dynamic load balancing; the utilization-to-latency map and the (here assumed) decode rates should be replaced with standardized serving-benchmark telemetry such as MLPerf Inference \citep{Reddi2020}. Finally, LCI as estimated here is a \emph{private} cost; a social variant would internalize the energy and carbon footprint of inference \citep{Masanet2020,Patterson2021}.
 
 % ================= 9. Conclusion =================
 \section{Conclusion}
 LCI prices what matters operationally: the cost per unit of usable intelligence at stated QoS. With a serving-aware model class, tractable chance constraints, and a clear aggregation procedure (IPD), the framework enables reproducible, location-aware measurement and supports architecture and infrastructure comparisons.
 \par\medskip\noindent\textbf{Future research.} Two directions are immediate. First, integrate demand-side behavior (elasticities, pass-through, adoption frictions) to connect LCI to equilibrium PUI and welfare. Second, generalize the measurement object beyond discrete benchmarks to multi-step or continuous AI production processes (e.g., agentic workflows), incorporating inter-stage dependencies and pipeline-level QoS. Identification using natural experiments in energy prices, capacity shocks, or network upgrades can sharpen causal inference on the drivers of $\LCI$.
 
+% ================= Data and Code Availability =================
+\section*{Data and Code Availability}
+All inputs, code, and results that reproduce every number and figure in this
+paper are openly available at \url{https://github.com/apmorey93/lci-paper}.
+The repository contains the validated GI/G/$k$ processor-sharing simulator and
+its Erlang-C validation, the public input data (cloud-GPU and energy prices,
+benchmark scores, and API prices, each with source URL and access date), the
+estimation and figure-generation scripts, and the parameter file
+(\texttt{data/params.json}). Running \texttt{make results} regenerates the result
+tables and figures deterministically from fixed seeds; continuous integration
+re-runs the pipeline, asserts the result tables are byte-identical, and rebuilds
+this PDF. Latency and throughput are obtained from the validated simulation (not
+from live-hardware serving); prices and benchmark accuracies are sourced; decode
+rates, per-task token counts, and reliability/safety levels are documented
+assumptions.
+
+\section*{Acknowledgments}
+This study uses only public data sources, including U.S.\ Energy Information
+Administration electricity prices, published cloud on-demand price lists, and
+publicly reported model benchmark results. All errors are the author's own.
+
 % ================= References =================
 \begin{thebibliography}{}
-\bibitem[Byrne and Syverson(2017)]{Byrne2017}
-Byrne, D.\ M., and C.\ Syverson. 2017. ``Prices of High-Tech Products, Mismeasurement, and the Pace of Innovation.'' \emph{American Economic Review} 107(5): 168--172.
 
-\bibitem[Pakes(2003)]{Pakes2003}
-Pakes, A. 2003. ``A Reconsideration of Hedonic Price Indexes with an Application to PCs.'' \emph{American Economic Review} 93(5): 1578--1596.
+\bibitem[Acemoglu and Restrepo(2018)]{Acemoglu2018} Daron Acemoglu and Pascual Restrepo. 2018. ``The Race between Man and Machine: Implications of Technology for Growth, Factor Shares, and Employment.'' \emph{American Economic Review} 108(6): 1488--1542.
 
-\bibitem[Triplett(1989)]{Triplett1989}
-Triplett, J.\ E. 1989. ``Price and Technological Change in a Capital Good: A Survey of Research on Computers.'' \emph{Brookings Papers on Economic Activity: Microeconomics}: 373--438.
+\bibitem[Brynjolfsson et~al.(2019)]{Brynjolfsson2019} Erik Brynjolfsson, Daniel Rock, and Chad Syverson. 2019. ``Artificial Intelligence and the Modern Productivity Paradox: A Clash of Expectations and Statistics.'' In \emph{The Economics of Artificial Intelligence: An Agenda}, ed. A.\ Agrawal, J.\ Gans, and A.\ Goldfarb, 23--60. Chicago: University of Chicago Press.
+
+\bibitem[Byrne et~al.(2016)]{Byrne2016} David M. Byrne, John G. Fernald, and Marshall B. Reinsdorf. 2016. ``Does the United States Have a Productivity Slowdown or a Measurement Problem?'' \emph{Brookings Papers on Economic Activity} 47(1): 109--182.
+
+\bibitem[Dean and Barroso(2013)]{DeanBarroso2013} Jeffrey Dean and Luiz Andr\'e Barroso. 2013. ``The Tail at Scale.'' \emph{Communications of the ACM} 56(2): 74--80.
+
+\bibitem[Diewert(1976)]{Diewert1976} W. Erwin Diewert. 1976. ``Exact and Superlative Index Numbers.'' \emph{Journal of Econometrics} 4(2): 115--145.
+
+\bibitem[Feenstra(1994)]{Feenstra1994} Robert C. Feenstra. 1994. ``New Product Varieties and the Measurement of International Prices.'' \emph{American Economic Review} 84(1): 157--177.
+
+\bibitem[Gunther(2010)]{Gunther2010} Neil J. Gunther. 2010. \emph{Guerrilla Capacity Planning: A Tactical Approach to Planning for Highly Scalable Applications and Services}. Berlin: Springer.
+
+\bibitem[Halfin and Whitt(1981)]{HalfinWhitt1981} Shlomo Halfin and Ward Whitt. 1981. ``Heavy-Traffic Limits for Queues with Many Exponential Servers.'' \emph{Operations Research} 29(3): 567--588.
+
+\bibitem[Harchol-Balter(2013)]{HarcholBalter2013} Mor Harchol-Balter. 2013. \emph{Performance Modeling and Design of Computer Systems: Queueing Theory in Action}. Cambridge: Cambridge University Press.
+
+\bibitem[Hoffmann et~al.(2022)]{Hoffmann2022} Jordan Hoffmann, Sebastian Borgeaud, Arthur Mensch, et~al. 2022. ``Training Compute-Optimal Large Language Models.'' \emph{arXiv preprint} arXiv:2203.15556.
+
+\bibitem[Izacard and Grave(2021)]{IzacardGrave2021} Gautier Izacard and Edouard Grave. 2021. ``Leveraging Passage Retrieval with Generative Models for Open Domain Question Answering.'' In \emph{Proceedings of EACL 2021}, 874--880.
+
+\bibitem[Jorgenson and Stiroh(2000)]{JorgensonStiroh2000} Dale W. Jorgenson and Kevin J. Stiroh. 2000. ``Raising the Speed Limit: U.S. Economic Growth in the Information Age.'' \emph{Brookings Papers on Economic Activity} 2000(1): 125--211.
+
+\bibitem[Karpukhin et~al.(2020)]{Karpukhin2020} Vladimir Karpukhin, Barlas O\u{g}uz, Sewon Min, et~al. 2020. ``Dense Passage Retrieval for Open-Domain Question Answering.'' In \emph{Proceedings of EMNLP 2020}, 6769--6781.
+
+\bibitem[Lewis et~al.(2020)]{Lewis2020} Patrick Lewis, Ethan Perez, Aleksandra Piktus, et~al. 2020. ``Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks.'' \emph{Advances in Neural Information Processing Systems} 33: 9459--9474.
+
+\bibitem[Masanet et~al.(2020)]{Masanet2020} Eric Masanet, Arman Shehabi, Nuoa Lei, Sarah Smith, and Jonathan Koomey. 2020. ``Recalibrating Global Data Center Energy-Use Estimates.'' \emph{Science} 367(6481): 984--986.
+
+\bibitem[Nordhaus(2007)]{Nordhaus2007} William D. Nordhaus. 2007. ``Two Centuries of Productivity Growth in Computing.'' \emph{The Journal of Economic History} 67(1): 128--159.
+
+\bibitem[Pakes(2003)]{Pakes2003} Ariel Pakes. 2003. ``A Reconsideration of Hedonic Price Indexes with an Application to PC's.'' \emph{American Economic Review} 93(5): 1578--1596.
+
+\bibitem[Patterson et~al.(2021)]{Patterson2021} David Patterson, Joseph Gonzalez, Quoc Le, et~al. 2021. ``Carbon Emissions and Large Neural Network Training.'' \emph{arXiv preprint} arXiv:2104.10350.
+
+\bibitem[Reddi et~al.(2020)]{Reddi2020} Vijay Janapa Reddi, Christine Cheng, David Kanter, et~al. 2020. ``MLPerf Inference Benchmark.'' In \emph{2020 ACM/IEEE 47th International Symposium on Computer Architecture (ISCA)}, 446--459.
+
+\bibitem[Sevilla et~al.(2022)]{Sevilla2022} Jaime Sevilla, Lennart Heim, Anson Ho, Tamay Besiroglu, Marius Hobbhahn, and Pablo Villalobos. 2022. ``Compute Trends Across Three Eras of Machine Learning.'' In \emph{Proceedings of IJCNN 2022}, 1--8.
+
+\bibitem[Syverson(2017)]{Syverson2017} Chad Syverson. 2017. ``Challenges to Mismeasurement Explanations for the US Productivity Slowdown.'' \emph{Journal of Economic Perspectives} 31(2): 165--186.
+
+\bibitem[Triplett(1989)]{Triplett1989} Jack E. Triplett. 1989. ``Price and Technological Change in a Capital Good: A Survey of Research on Computers.'' In \emph{Technology and Capital Formation}, ed. D.\ W.\ Jorgenson and R.\ Landau. Cambridge, MA: MIT Press.
+
+\bibitem[Whitt(2002)]{Whitt2002} Ward Whitt. 2002. \emph{Stochastic-Process Limits: An Introduction to Stochastic-Process Limits and Their Application to Queues}. New York: Springer.
+
 \end{thebibliography}
 
 % ================= Appendices =================
