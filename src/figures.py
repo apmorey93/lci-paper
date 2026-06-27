@@ -37,7 +37,7 @@ def fig_qos_latency():
     ax.set_xlabel(r"Latency $\ell$ (ms)"); ax.set_ylabel(r"Quality factor $\lambda(\ell)$")
     ax.set_title("Latency quality factor vs. SLA softness")
     ax.legend(frameon=False); ax.set_ylim(0, 1.05)
-    fig.savefig(FIGS / "fig_qos_latency.pdf", bbox_inches="tight"); plt.close(fig)
+    fig.savefig(FIGS / "fig_qos_latency.pdf", bbox_inches="tight", metadata={"CreationDate": None}); plt.close(fig)
     print("[OK] fig_qos_latency.pdf")
 
 
@@ -64,7 +64,7 @@ def fig_throughput_lci():
     ax2.axvline(ustar, color="#d62728", ls=":", lw=1)
     ax2.text(ustar - 0.04, ax2.get_ylim()[1] * 0.9, r"$u^\ast$", color="#d62728")
     ax1.set_title("LCI falls with utilization; latency SLO caps feasible $u$ (QA, 2025)")
-    fig.savefig(FIGS / "fig_throughput_LCI_vs_util.pdf", bbox_inches="tight"); plt.close(fig)
+    fig.savefig(FIGS / "fig_throughput_LCI_vs_util.pdf", bbox_inches="tight", metadata={"CreationDate": None}); plt.close(fig)
     print("[OK] fig_throughput_LCI_vs_util.pdf")
 
 
@@ -86,7 +86,7 @@ def fig_lci_curve():
     ax.set_xlabel("Utilisation $u$"); ax.set_ylabel(r"LCI ($\times10^{-3}$ \$/task)")
     ax.set_title(r"LCI$(u)$ by family (2025); solid = QoS-feasible, $\bullet = u^\ast$ frontier")
     ax.legend(frameon=False)
-    fig.savefig(FIGS / "fig_LCI_curve.pdf", bbox_inches="tight"); plt.close(fig)
+    fig.savefig(FIGS / "fig_LCI_curve.pdf", bbox_inches="tight", metadata={"CreationDate": None}); plt.close(fig)
     print("[OK] fig_LCI_curve.pdf")
 
 
@@ -102,7 +102,7 @@ def fig_wedge():
     ax.set_ylabel("USD per task (log scale)"); ax.set_xlabel("Date")
     ax.set_title("The wedge: market price vs. LCI cost frontier")
     ax.legend(frameon=False); fig.autofmt_xdate()
-    fig.savefig(FIGS / "fig_wedge.pdf", bbox_inches="tight"); plt.close(fig)
+    fig.savefig(FIGS / "fig_wedge.pdf", bbox_inches="tight", metadata={"CreationDate": None}); plt.close(fig)
     print("[OK] fig_wedge.pdf")
 
 
@@ -122,7 +122,7 @@ def fig_validation():
     ax.set_xlabel("Erlang-C analytic mean wait (ms)"); ax.set_ylabel("Simulated mean wait (ms)")
     ax.set_title("Simulator validation (M/M/k): worst error < 5%")
     ax.legend(frameon=False)
-    fig.savefig(FIGS / "fig_queue_validation.pdf", bbox_inches="tight"); plt.close(fig)
+    fig.savefig(FIGS / "fig_queue_validation.pdf", bbox_inches="tight", metadata={"CreationDate": None}); plt.close(fig)
     print("[OK] fig_queue_validation.pdf")
 
 

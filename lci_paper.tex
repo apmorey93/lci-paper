@@ -106,7 +106,7 @@
 \titlespacing*{\paragraph}{0pt}{0.6em}{1em}
 
 % ========= Document Info =========
-\title{The Cost of Usable Intelligence: Measuring AI’s Economic Productivity Frontier}
+\title{The Cost of Usable Intelligence: Measuring AI's Economic Productivity Frontier}
 \author{\textbf{Aditya Morey}\\
 \small Corresponding author: \href{mailto:adityamorey1723@gmail.com}{adityamorey1723@gmail.com}\\
 \small ORCID: 0009-0000-2864-4586}
@@ -117,7 +117,7 @@
 \thispagestyle{plain}
 
 % ================= Executive Summary =================
-\noindent\textbf{Executive Summary.}\;\;While the cost of raw compute has plummeted, the true economic cost of deploying AI remains opaque. This paper introduces the \emph{Locational Cost of Intelligence} (LCI): the minimum cost to deliver one task–equivalent unit of AI output at specified accuracy, latency, reliability, and safety (QoS) thresholds. LCI measures the cost of \emph{usable} intelligence rather than raw compute or token throughput. It formalizes the supply-side cost of intelligence using a queueing-theoretic model of serving (GI/G/$k$ with processor sharing and micro-batching) and defines a reproducible empirical protocol for implementation. Policymakers and industry leaders can interpret LCI as a quality-adjusted cost metric—comparable across regions, architectures, and infrastructure choices.
+\noindent\textbf{Executive Summary.}\;\;While the cost of raw compute has plummeted, the true economic cost of deploying AI remains opaque. This paper introduces the \emph{Locational Cost of Intelligence} (LCI): the minimum cost to deliver one task--equivalent unit of AI output at specified accuracy, latency, reliability, and safety (QoS) thresholds. LCI measures the cost of \emph{usable} intelligence rather than raw compute or token throughput. It formalizes the supply-side cost of intelligence using a queueing-theoretic model of serving (GI/G/$k$ with processor sharing and micro-batching) and defines a reproducible empirical protocol for implementation. Policymakers and industry leaders can interpret LCI as a quality-adjusted cost metric---comparable across regions, architectures, and infrastructure choices.
 
 \vspace{0.6em}
 \noindent\textbf{Keywords:} AI economics; hedonic index; queueing; chance constraints; productivity measurement.
@@ -125,7 +125,7 @@
 \newpage
 
 % ================= Abstract =================
-\noindent\textbf{Abstract.}\;\;We formalize an estimable measurement object—the \emph{Locational Cost of Intelligence} (LCI)—as the value of a cost-minimization program delivering one task–equivalent unit of AI output at targeted QoS thresholds with violation probability $\varepsilon$. QoS enters through convex surrogates for a joint chance constraint. We show LCI is the ratio of operating cost to quality-adjusted throughput, $\LCI=C/(T\,\phi)$, which \emph{declines with utilization} (fixed cost spread over throughput); the latency chance constraint caps feasible utilization, so the cost-minimizing operating point $u^\ast$ sits at the \emph{latency-feasibility frontier}. Serving is modeled using a GI/G/$k$ processor-sharing queue with micro-batching, implemented as a discrete-event simulator that we \emph{validate against the closed-form M/M/$k$ Erlang-C} mean wait (worst-case error $<5\%$). We then estimate LCI for three task families (QA, code, reasoning) over 2023--2025 by combining simulated latency/throughput with \emph{public, cited} prices and accuracies—cloud-GPU list prices, EIA energy tariffs, and published Llama-2/3/3.1-70B benchmark scores (decode rates, token counts, and reliability/safety are documented assumptions)—and chain them into a Fisher \emph{Intelligence Price Deflator} (IPD). The IPD falls from 100 (2023Q3) to $\approx$46 (2025Q2), a $\sim$54\% decline in the quality-adjusted cost of intelligence; the wedge between market price (public API list prices) and the LCI cost frontier compresses from $\sim$36--53$\times$ to below $1\times$ as hosted commodity tiers emerge. \emph{Scope note:} latency and throughput are simulated (the simulator is validated, not run on live GPUs); prices and benchmark accuracies are sourced. All numbers reproduce from public data via the released code.
+\noindent\textbf{Abstract.}\;\;We formalize an estimable measurement object---the \emph{Locational Cost of Intelligence} (LCI)---as the value of a cost-minimization program delivering one task--equivalent unit of AI output at targeted QoS thresholds with violation probability $\varepsilon$. QoS enters through convex surrogates for a joint chance constraint. We show LCI is the ratio of operating cost to quality-adjusted throughput, $\LCI=C/(T\,\phi)$, which \emph{declines with utilization} (fixed cost spread over throughput); the latency chance constraint caps feasible utilization, so the cost-minimizing operating point $u^\ast$ sits at the \emph{latency-feasibility frontier}. Serving is modeled using a GI/G/$k$ processor-sharing queue with micro-batching, implemented as a discrete-event simulator that we \emph{validate against the closed-form M/M/$k$ Erlang-C} mean wait (worst-case error $<5\%$). We then estimate LCI for three task families (QA, code, reasoning) over 2023--2025 by combining simulated latency/throughput with \emph{public, cited} prices and accuracies---cloud-GPU list prices, EIA energy tariffs, and published Llama-2/3/3.1-70B benchmark scores (decode rates, token counts, and reliability/safety are documented assumptions)---and chain them into a Fisher \emph{Intelligence Price Deflator} (IPD). The IPD falls from 100 (2023Q3) to $\approx$46 (2025Q2), a $\sim$54\% decline in the quality-adjusted cost of intelligence; the wedge between market price (public API list prices) and the LCI cost frontier compresses from $\sim$36--53$\times$ to below $1\times$ as hosted commodity tiers emerge. \emph{Scope note:} latency and throughput are simulated (the simulator is validated, not run on live GPUs); prices and benchmark accuracies are sourced. All numbers reproduce from public data via the released code.
 
 \vspace{0.3cm}
 \noindent\textbf{JEL Codes:} D24, L11, O33
@@ -134,14 +134,14 @@
 
 % ================= 1. Introduction =================
 \section{Introduction and Motivation}
-Economic measurement should price what firms purchase and deploy: \emph{usable, quality-guaranteed completions}, not raw tokens or GPU-hours. We define the \emph{Locational Cost of Intelligence} (LCI) as the minimum cost, conditional on location-specific factor prices, to produce one task–equivalent unit of AI output at pre-specified QoS thresholds. LCI is task-family specific, QoS-constrained, and location-aware.
+Economic measurement should price what firms purchase and deploy: \emph{usable, quality-guaranteed completions}, not raw tokens or GPU-hours. We define the \emph{Locational Cost of Intelligence} (LCI) as the minimum cost, conditional on location-specific factor prices, to produce one task--equivalent unit of AI output at pre-specified QoS thresholds. LCI is task-family specific, QoS-constrained, and location-aware.
 
 \paragraph{Positioning.}
 Hedonic methods price quality-adjusted IT capital \citep{Triplett1989,Pakes2003,Byrne2017}. LCI extends this approach to AI services by integrating accuracy, latency, reliability, and safety into a single supply-side cost object. The resulting index is designed for aggregation and macro analysis.
 
 \paragraph{Interpretation.}
-LCI is a \emph{cost} (supply) object, not a market \emph{price}. Its derivatives with respect to input prices recover optimal input demands (Shephard’s lemma). Equilibrium prices may differ; LCI isolates the technological cost frontier relevant for productivity accounting.
-\par\smallskip\textit{Dual perspective: the Price of Usable Intelligence (PUI).} Define PUI as the market price per task–equivalent unit sold at the same QoS thresholds. In competitive equilibrium with free entry, PUI weakly exceeds LCI; the wedge $\text{PUI}-\LCI$ reflects markups, congestion premia, risk premia, or scarcity rents (e.g., capacity constraints, IP, or regulatory bottlenecks). Thus, LCI is an observable \emph{floor} for the market price of usable intelligence and a natural input into welfare, incidence, and productivity analyses.
+LCI is a \emph{cost} (supply) object, not a market \emph{price}. Its derivatives with respect to input prices recover optimal input demands (Shephard's lemma). Equilibrium prices may differ; LCI isolates the technological cost frontier relevant for productivity accounting.
+\par\smallskip\textit{Dual perspective: the Price of Usable Intelligence (PUI).} Define PUI as the market price per task--equivalent unit sold at the same QoS thresholds. In competitive equilibrium with free entry, PUI weakly exceeds LCI; the wedge $\text{PUI}-\LCI$ reflects markups, congestion premia, risk premia, or scarcity rents (e.g., capacity constraints, IP, or regulatory bottlenecks). Thus, LCI is an observable \emph{floor} for the market price of usable intelligence and a natural input into welfare, incidence, and productivity analyses.
 
 % ================= 2. Definitions =================
 \section{Definitions and Measurement Object}
@@ -154,7 +154,7 @@ One \emph{AI task} is a single benchmark instance completed at QoS thresholds $(
 \end{definition}
 
 \paragraph{Quality-adjusted output.}
-Tokens are intermediate. Output is task–equivalent completions with QoS:
+Tokens are intermediate. Output is task--equivalent completions with QoS:
 \begin{equation}
 \QOU
 = T \cdot \phi(a,\ell,q,s),\qquad
@@ -170,7 +170,7 @@ Each sub-function is \emph{threshold-normalized} to $(0,1]$, equal to $1$ when i
 &= \frac{\bar\ell}{\bar\ell+\mathrm{sp}_\tau(\ell-\bar\ell)},&
 \mathrm{sp}_\tau(z)&=\tau\ln\!\big(1+e^{z/\tau}\big),\ \tau>0. &&
 \end{align}
-$\alpha$ is the accuracy attainment ratio (capped at target); $\rho,\sigma$ are reliability/safety attainment as the ratio of allowed to actual shortfall; $\lambda$ is a smooth latency hinge (no penalty at or below $\bar\ell$, continuous penalty above). This is exactly the aggregator implemented in the released code; the multiplicative form makes a near-total failure on any one dimension dominate (strong complementarity).
+$\alpha$ is the accuracy attainment ratio (capped at target); $\rho,\sigma$ are reliability/safety attainment as the ratio of allowed to actual shortfall; $\lambda$ is a smooth latency hinge (no penalty at or below $\bar\ell$, continuous penalty above; Figure~\ref{fig:qoslatency}). This is exactly the aggregator implemented in the released code; the multiplicative form makes a near-total failure on any one dimension dominate (strong complementarity).
 
 \begin{figure}[t]
 \centering
@@ -227,7 +227,7 @@ Let $x=(H,P,W,N,O,\dots)$ denote inputs with location-specific prices $p=(\kappa
 & \PP\!\big(a\ge \bar a,\, \ell\le \bar \ell,\, q\ge \bar q,\, s\ge \bar s\big)\;\ge\; 1-\varepsilon.
 \end{aligned}
 \end{equation}
-Define $\LCI_{\mathcal T}(Q,\bar a,\bar\ell,\bar q,\bar s; p,\elloc,\varepsilon)=c_{\mathcal T}(Q;p,\elloc,\varepsilon)/Q$, where $c_{\mathcal T}$ is the value of \eqref{eq:program}. By Shephard’s lemma, $\partial \LCI/\partial p_j = x_j^*/Q$.
+Define $\LCI_{\mathcal T}(Q,\bar a,\bar\ell,\bar q,\bar s; p,\elloc,\varepsilon)=c_{\mathcal T}(Q;p,\elloc,\varepsilon)/Q$, where $c_{\mathcal T}$ is the value of \eqref{eq:program}. By Shephard's lemma, $\partial \LCI/\partial p_j = x_j^*/Q$.
 
 \paragraph{Convex surrogates for tractability.}
 We enforce the joint QoS constraint via either of the following convex relaxations (both conservative and polynomial-time solvable):
@@ -238,7 +238,7 @@ We enforce the joint QoS constraint via either of the following convex relaxatio
 
 % ================= 5. Properties =================
 \section{Properties and Testable Implications}
-\paragraph{Property A (RAG–scale efficiency).}
+\paragraph{Property A (RAG--scale efficiency).}
 At the interior optimum,
 \[
 \frac{\partial \ln \QOU}{\partial \ln R}\Big/\frac{\partial \ln C}{\partial \ln R}
@@ -253,7 +253,7 @@ Under \eqref{eq:acc}, the tipping set is characterized by $\tfrac{\theta_R\zeta_
 Transmission investment lowers LCI through (i) the energy margin (lower $c_E$ at relocated sites) and (ii) the QoS margin (reduced network distance enabling relocation while meeting $\bar\ell$). The optimal site minimizes LCI over locations subject to latency \emph{feasibility}; if network RTT exceeds $\bar\ell$, relocation is infeasible regardless of energy prices.
 
 \paragraph{Property C (Convexity near saturation).}
-Under GI/G/$k$–PS with finite second moments and micro-batching $(B,\tau_b)$, the p95 latency $W_{0.95}(u)$ is convex on $[u_0,u_{\max})$ for some $u_0<u_{\max}$; hence $\LCI(u)$ is convex near saturation. Appendix~\ref{app:queue} sketches the heavy-traffic argument.
+Under GI/G/$k$--PS with finite second moments and micro-batching $(B,\tau_b)$, the p95 latency $W_{0.95}(u)$ is convex on $[u_0,u_{\max})$ for some $u_0<u_{\max}$; hence $\LCI(u)$ is convex near saturation. Appendix~\ref{app:queue} sketches the heavy-traffic argument.
 
 % ---- Figure: Frontier (fixed and clear) ----
 \begin{figure}[t]
@@ -297,7 +297,7 @@ Under GI/G/$k$–PS with finite second moments and micro-batching $(B,\tau_b)$, 
   \node at (4.9,2.4) {\scriptsize Hybrid};
   \node at (7.3,2.4) {\scriptsize \textbf{Scale-favored}};
 \end{tikzpicture}
-\caption{RAG–scale efficiency map. The efficient locus equates marginal QOU-per-dollar; its position depends on $(\zeta_m,\zeta_R)$ and relative costs $(MC_m,MC_R)$.}
+\caption{RAG--scale efficiency map. The efficient locus equates marginal QOU-per-dollar; its position depends on $(\zeta_m,\zeta_R)$ and relative costs $(MC_m,MC_R)$.}
 \label{fig:ragscale}
 \end{figure}
 
@@ -425,7 +425,7 @@ Across families, $\LCI(u)$ declines with utilization within the QoS-feasible
 region; the latency chance constraint caps feasible $u$, so the cost-minimizing
 operating point $u^\ast$ sits at the latency-feasibility frontier
 ($u^\ast\in[0.84,0.90]$ here; Figure~\ref{fig:lcicurve}). The reported LCI for
-each (date, family) is the minimum over available GPU options at $u^\ast$—the
+each (date, family) is the minimum over available GPU options at $u^\ast$---the
 cost frontier.
 
 \begin{figure}[t]
@@ -444,7 +444,7 @@ cost frontier.
 \toprule
 Family & 2023Q3 & 2024Q2 & 2024Q3 & 2025Q2 \\
 \midrule
-QA (MMLU)        & 0.73 & 0.60 & 0.56 & 0.36 \\
+QA (MMLU)        & 0.73 & 0.59 & 0.56 & 0.36 \\
 Code (HumanEval) & 1.74 & 1.18 & 1.11 & 0.71 \\
 Reasoning (GSM8K)& 1.00 & 0.79 & 0.74 & 0.48 \\
 \bottomrule
@@ -484,7 +484,7 @@ Comparing the LCI frontier with public API list prices (PUI), the wedge
 $\text{PUI}/\LCI$ falls from $\sim$36--53$\times$ in 2023 (GPT-4-era pricing)
 to below $1\times$ by mid-2024 (Figure~\ref{fig:wedge}). A wedge below one means
 hosted commodity tiers (e.g., GPT-4o-mini) are priced below our self-hosted
-Llama-70B frontier—reflecting smaller/cheaper served models, provider scale
+Llama-70B frontier---reflecting smaller/cheaper served models, provider scale
 economies, or strategic pricing not captured by the 70B self-host configuration.
 This underscores that LCI is configuration-specific: it is a floor \emph{given}
 the chosen model and serving plan, not an absolute lower bound across all
@@ -535,7 +535,7 @@ Pick $(\varepsilon_a,\varepsilon_\ell,\varepsilon_q,\varepsilon_s)$ such that $\
 Let $L\ge0$ be an economic loss that is zero when all QoS thresholds hold and positive otherwise (e.g., a weighted hinge). Enforce $\mathrm{CVaR}_{\varepsilon}(L)\le 0$. This is convex in decision variables whenever $L$ is convex.
 
 \section{Queueing-Theoretic Basis for Property C}\label{app:queue}
-Assume (i) GI/G/$k$ with processor sharing and micro-batching $(B,\tau_b)$; (ii) finite second moments for inter-arrival and service times; (iii) many-server heavy traffic ($k\to\infty$ with $(1-u)\sqrt{k}\to\beta$). In this Halfin–Whitt regime, diffusion approximations imply convexity of high-quantile response times in $u$ on $[u_0,u_{\max})$ for some $u_0<1$. Because $\partial \QOU/\partial \ell<0$ and $\lambda(\ell)$ is smooth and strictly decreasing for $\ell>\bar\ell$, $\LCI(u)$ inherits convexity near saturation. Micro-batching rescales effective service and inflates variability; under bounded moments, convexity of $W_{0.95}(u)$ is preserved.
+Assume (i) GI/G/$k$ with processor sharing and micro-batching $(B,\tau_b)$; (ii) finite second moments for inter-arrival and service times; (iii) many-server heavy traffic ($k\to\infty$ with $(1-u)\sqrt{k}\to\beta$). In this Halfin--Whitt regime, diffusion approximations imply convexity of high-quantile response times in $u$ on $[u_0,u_{\max})$ for some $u_0<1$. Because $\partial \QOU/\partial \ell<0$ and $\lambda(\ell)$ is smooth and strictly decreasing for $\ell>\bar\ell$, $\LCI(u)$ inherits convexity near saturation. Micro-batching rescales effective service and inflates variability; under bounded moments, convexity of $W_{0.95}(u)$ is preserved.
 
 \section{Empirical Protocol and Reproducible Artifacts}\label{app:empirical}
 \paragraph{Data release.}

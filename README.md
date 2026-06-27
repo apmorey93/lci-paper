@@ -84,9 +84,9 @@ comes from public API list prices; the wedge is `PUI / LCI`.
 - Deterministic seeds throughout; `results/meta.json` records versions, platform,
   parameters, and timestamps.
 - `make results` regenerates every table and figure from the CSVs.
-- Headline result: the IPD falls from 100 (2023-07) to ≈48 (2025-06) — a ~52%
+- Headline result: the IPD falls from 100 (2023Q3) to ≈46 (2025Q2) — a ~54%
   decline in the quality-adjusted cost of intelligence — driven by sourced GPU
-  price cuts, faster decoding, and benchmark-accuracy gains.
+  price cuts, (assumed) faster decoding, and benchmark-accuracy gains.
 
 ## License & citation
 

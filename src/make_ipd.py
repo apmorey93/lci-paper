@@ -103,7 +103,8 @@ def main():
         ax.legend(frameon=False)
         fig.autofmt_xdate()
         (BASE / "results" / "figures").mkdir(parents=True, exist_ok=True)
-        fig.savefig(BASE / "results" / "figures" / "fig_IPD.pdf", bbox_inches="tight")
+        fig.savefig(BASE / "results" / "figures" / "fig_IPD.pdf", bbox_inches="tight",
+                    metadata={"CreationDate": None})
         plt.close(fig)
         print("[OK] Wrote results/figures/fig_IPD.pdf")
     except Exception as e:

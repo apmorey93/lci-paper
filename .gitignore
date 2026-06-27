@@ -31,3 +31,5 @@ __pycache__/
 data/interim/
 # Local tectonic build output
 _tectout/
+# Scratch/analysis helpers
+_*.py
