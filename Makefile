@@ -18,6 +18,7 @@ results:
 	cd src && $(PYTHON) lci_program.py
 	cd src && $(PYTHON) make_ipd.py
 	cd src && $(PYTHON) figures.py
+	cd src && $(PYTHON) sensitivity.py
 	@echo "Results -> results/tables ; figures -> results/figures"
 
 validate:

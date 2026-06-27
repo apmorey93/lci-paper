@@ -117,19 +117,12 @@
 \maketitle
 \thispagestyle{plain}
 
-% ================= Executive Summary =================
-\noindent\textbf{Executive Summary.}\;\;While the cost of raw compute has plummeted, the true economic cost of deploying AI remains opaque. This paper introduces the \emph{Locational Cost of Intelligence} (LCI): the minimum cost to deliver one task--equivalent unit of AI output at specified accuracy, latency, reliability, and safety (QoS) thresholds. LCI measures the cost of \emph{usable} intelligence rather than raw compute or token throughput. It formalizes the supply-side cost of intelligence using a queueing-theoretic model of serving (GI/G/$k$ with processor sharing and micro-batching) and defines a reproducible empirical protocol for implementation. Policymakers and industry leaders can interpret LCI as a quality-adjusted cost metric---comparable across regions, architectures, and infrastructure choices.
-
-\vspace{0.6em}
-\noindent\textbf{Keywords:} AI economics; hedonic index; queueing; chance constraints; productivity measurement.
-
-\newpage
-
 % ================= Abstract =================
-\noindent\textbf{Abstract.}\;\;We formalize an estimable measurement object---the \emph{Locational Cost of Intelligence} (LCI)---as the value of a cost-minimization program delivering one task--equivalent unit of AI output at targeted QoS thresholds with violation probability $\varepsilon$. QoS enters through convex surrogates for a joint chance constraint. We show LCI is the ratio of operating cost to quality-adjusted throughput, $\LCI=C/(T\,\phi)$, which \emph{declines with utilization} (fixed cost spread over throughput); the latency chance constraint caps feasible utilization, so the cost-minimizing operating point $u^\ast$ sits at the \emph{latency-feasibility frontier}. Serving is modeled using a GI/G/$k$ processor-sharing queue with micro-batching, implemented as a discrete-event simulator that we \emph{validate against the closed-form M/M/$k$ Erlang-C} mean wait (worst-case error $<5\%$). We then estimate LCI for three task families (QA, code, reasoning) over 2023--2025 by combining simulated latency/throughput with \emph{public, cited} prices and accuracies---cloud-GPU list prices, EIA energy tariffs, and published Llama-2/3/3.1-70B benchmark scores (decode rates, token counts, and reliability/safety are documented assumptions)---and chain them into a Fisher \emph{Intelligence Price Deflator} (IPD). The IPD falls from 100 (2023Q3) to $\approx$46 (2025Q2), a $\sim$54\% decline in the quality-adjusted cost of intelligence; the wedge between market price (public API list prices) and the LCI cost frontier compresses from $\sim$36--53$\times$ to below $1\times$ as hosted commodity tiers emerge. \emph{Scope note:} latency and throughput are simulated (the simulator is validated, not run on live GPUs); prices and benchmark accuracies are sourced. All numbers reproduce from public data via the released code.
+\noindent\textbf{Abstract.}\;\;We formalize an estimable measurement object---the \emph{Locational Cost of Intelligence} (LCI)---as the value of a cost-minimization program delivering one task--equivalent unit of AI output at targeted QoS thresholds with violation probability $\varepsilon$. QoS enters through convex surrogates for a joint chance constraint. We show LCI is the ratio of operating cost to quality-adjusted throughput, $\LCI=C/(T\,\phi)$, which \emph{declines with utilization} (fixed cost spread over throughput); the latency chance constraint caps feasible utilization, so the cost-minimizing operating point $u^\ast$ sits at the \emph{latency-feasibility frontier}. Serving is modeled using a GI/G/$k$ processor-sharing queue with micro-batching, implemented as a discrete-event simulator that we \emph{validate against the closed-form M/M/$k$ Erlang-C} mean wait (worst-case error $<5\%$). We then estimate LCI for three task families (QA, code, reasoning) over 2023--2025 by combining simulated latency/throughput with \emph{public, cited} prices and accuracies---cloud-GPU list prices, EIA energy tariffs, and published Llama-2/3/3.1-70B benchmark scores (decode rates, token counts, and reliability/safety are documented assumptions)---and chain them into a Fisher \emph{Intelligence Price Deflator} (IPD). In an \emph{illustrative single-configuration} estimation (one open 70B model family, three task families, four quarters, one region), the IPD falls from 100 (2023Q3) to $\approx$46 (2025Q2); a sensitivity analysis varying the assumed decode rates ($\pm$50\%), token counts, latency softness, and QoS weights leaves a substantial decline intact (final-period IPD in $[35,49]$), so we read the result as a robust \emph{qualitative} fall in the quality-adjusted cost of intelligence rather than a precise economy-wide estimate. The wedge between market price (public API list prices) and the LCI cost frontier compresses from $\sim$36--53$\times$ to below $1\times$ as hosted commodity tiers emerge. \emph{Scope note:} latency and throughput are simulated (the simulator is validated, not run on live GPUs); prices and benchmark accuracies are sourced; decode rates, token counts, and reliability/safety are documented assumptions. All numbers reproduce from public data via the released code.
 
 \vspace{0.3cm}
-\noindent\textbf{JEL Codes:} D24, L11, O33
+\noindent\textbf{Keywords:} AI economics; hedonic price index; quality of service; queueing; chance constraints; productivity measurement.\\
+\noindent\textbf{JEL Codes:} D24, L11, O33, E31, C43.
 
 \newpage
 
@@ -139,6 +132,20 @@ Economic measurement should price what firms purchase and deploy: \emph{usable, 
 
 \paragraph{Positioning.}
 Hedonic methods price quality-adjusted IT capital \citep{Triplett1989,Pakes2003}, and the deflator tradition extends this to computing and the information economy \citep{Nordhaus2007,JorgensonStiroh2000}. LCI extends this approach to AI \emph{services} by integrating accuracy, latency, reliability, and safety into a single supply-side cost object. The resulting index is designed for aggregation and macro analysis, and speaks to the AI/productivity-measurement debate \citep{Brynjolfsson2019,Acemoglu2018,Syverson2017,Byrne2016}.
+
+\paragraph{Relation to existing cost measures.}
+LCI is distinct from the two nearest measurement traditions. Systems benchmarks
+such as MLPerf Inference \citep{Reddi2020} report throughput and latency (and, in
+derivatives, dollar-per-query) for a fixed operating point, but do not (i) impose
+a \emph{joint} quality-of-service feasibility constraint that pins the operating
+utilization, (ii) convert a configuration into a quality-adjusted cost-per-usable-task,
+or (iii) aggregate across tasks and time into a superlative price index. Hedonic
+price indices for computing and cloud capital \citep{Triplett1989,Pakes2003}
+quality-adjust the price of \emph{hardware/instances}, not of delivered, QoS-guaranteed
+task output. LCI's marginal contribution is to combine (a) a chance-constrained QoS
+aggregator, (b) a queueing-derived latency-feasibility frontier that determines the
+cost-minimizing operating point, and (c) superlative (Fisher) aggregation into a
+deflator---turning engineering serving data into an economic price object.
 
 \paragraph{Interpretation.}
 LCI is a \emph{cost} (supply) object, not a market \emph{price}. Its derivatives with respect to input prices recover optimal input demands (Shephard's lemma). Equilibrium prices may differ; LCI isolates the technological cost frontier relevant for productivity accounting.
@@ -238,8 +245,13 @@ We enforce the joint QoS constraint via either of the following convex relaxatio
 
 % ================= 5. Properties =================
 \section{Properties and Testable Implications}
-\paragraph{Property A (RAG--scale efficiency).}
-At the interior optimum,
+The following are \emph{observations} motivated by the program and by heavy-traffic
+queueing theory, with testable empirical content; we state assumptions informally
+rather than as fully proved theorems, and verify the load-bearing one (Observation~C)
+numerically on the actual serving system in Section~\ref{sec:results}.
+
+\paragraph{Observation A (RAG--scale efficiency).}
+At an interior optimum,
 \[
 \frac{\partial \ln \QOU}{\partial \ln R}\Big/\frac{\partial \ln C}{\partial \ln R}
 \;\ge\;
@@ -249,11 +261,11 @@ At the interior optimum,
 \]
 Under \eqref{eq:acc}, the tipping set is characterized by $\tfrac{\theta_R\zeta_R R^{\zeta_R}}{MC_R/R}\gtrless \tfrac{\theta_m\zeta_m m^{\zeta_m}}{MC_m/m}$.
 
-\paragraph{Property B (Two-margin transmission feasibility).}
-Transmission investment lowers LCI through (i) the energy margin (lower $c_E$ at relocated sites) and (ii) the QoS margin (reduced network distance enabling relocation while meeting $\bar\ell$). The optimal site minimizes LCI over locations subject to latency \emph{feasibility}; if network RTT exceeds $\bar\ell$, relocation is infeasible regardless of energy prices.
+\paragraph{Observation B (Two-margin transmission feasibility).}
+Transmission investment lowers LCI through (i) the energy margin (lower $c_E$ at relocated sites) and (ii) the QoS margin (reduced network distance enabling relocation while meeting $\bar\ell$). The optimal site minimizes LCI over locations subject to latency \emph{feasibility}; if network RTT exceeds $\bar\ell$, relocation is infeasible regardless of energy prices. (We illustrate this margin conceptually in Figure~\ref{fig:frontier}; the empirics in Section~\ref{sec:results} fix a single region, so cross-location estimation is left to future work.)
 
-\paragraph{Property C (Convexity near saturation).}
-Under GI/G/$k$--PS with finite second moments and micro-batching $(B,\tau_b)$, the p95 latency $W_{0.95}(u)$ is convex on $[u_0,u_{\max})$ for some $u_0<u_{\max}$; hence $\LCI(u)$ is convex near saturation. Appendix~\ref{app:queue} sketches the heavy-traffic argument.
+\paragraph{Observation C (Convexity near saturation).}
+In many-server heavy traffic, high-quantile response times rise convexly as load approaches capacity (Appendix~\ref{app:queue}); since $\partial\phi/\partial\ell<0$ for $\ell>\bar\ell$, the quality markup $1/\phi(u)$ and hence $\LCI(u)$ are convex near saturation over the full utilization range. The closed-form heavy-traffic argument is exact for M/M/$k$ (the case our Erlang-C validation covers); for the actual GI/G/$k$--PS-with-batching system we do not prove convexity but \emph{confirm it numerically} from the validated simulator---the measured $W_{0.95}(u)$ is monotone and convex in $u$ across the grid (Section~\ref{sec:results}; \texttt{results/tables/norm\_curve.csv}). The economically relevant consequence used here is weaker: within the QoS-feasible region $\LCI(u)$ is decreasing, so $u^\ast$ is the feasibility frontier.
 
 % ---- Figure: Frontier (fixed and clear) ----
 \begin{figure}[t]
@@ -343,6 +355,8 @@ Safety & audit pass share & fraction (0--1) & $s$ \\
 Parameter & Value & Basis \\
 \midrule
 QoS weights $(\eta_a,\eta_\ell,\eta_q,\eta_s)$ & $(0.5,0.2,0.2,0.1)$ & assumed (policy) \\
+Accuracy targets $\bar a$ (QA/Code/Reas.) & $0.80/0.50/0.70$ & assumed (policy) \\
+Availability/safety targets $\bar q,\bar s$ & $0.99,\,0.95$ & assumed (policy) \\
 Latency softness $\tau$ & $2000$~ms & assumed \\
 Violation budget $\varepsilon$ & $0.05$ & assumed \\
 Servers $k$, batch $B$ & $4$, $16$ & assumed \\
@@ -350,7 +364,7 @@ Service CoV$^2$ (arrival, service) & $(1.0,\,0.3)$ & assumed \\
 Latency SLO $\bar\ell$ (QA/Reas./Code) & $18/24/36$~s & assumed \\
 Overhead factor & $1.15$ & assumed \\
 Decode rate (70B, A100/H100) & $22$--$50$ tok/s & assumed \\
-Availability $q$, safety $s$ & $0.999$, $0.98$ & assumed \\
+Availability $q$, safety $s$ (delivered) & $0.999$, $0.98$ & assumed \\
 GPU/energy/API prices & see \texttt{data/external/} & sourced (cited) \\
 Benchmark accuracy $a$ & see \texttt{data/evals/} & sourced (cited) \\
 p95 latency $W_{0.95}(u)$ & simulated & validated DES \\
@@ -405,7 +419,11 @@ $(\eta_a,\eta_\ell,\eta_q,\eta_s)=(0.5,0.2,0.2,0.1)$, softness $\tau{=}2000$\,ms
 full-completion p95 latency SLOs $\bar\ell\in\{18,24,36\}$\,s for QA/Reasoning/Code,
 violation budget $\varepsilon{=}0.05$. Decode rates, per-task token counts, and
 operational $q{=}0.999$, $s{=}0.98$ are documented assumptions (not sourced).
-Inputs: AWS p4d/p5 on-demand list prices (A100 \& H100,
+\emph{Serving topology.} A 70B model in FP16 ($\approx$140\,GB) exceeds a single
+A100/H100, so each replica is a tensor-parallel shard across the GPUs of one
+instance; we cost the full instance (per-GPU price $\times$ GPUs) and treat the
+per-GPU decode rate as the shard's per-request rate, with $k$ indexing concurrent
+replicas. Inputs: AWS p4d/p5 on-demand list prices (A100 \& H100,
 incl.\ the June-2025 H100 price cut), EIA industrial energy tariffs, and
 published Llama-2/3/3.1-70B scores (MMLU/HumanEval/GSM8K) mapped to the QA/code/
 reasoning families. Energy is held at a single sourced 2024 us-east-1 industrial
@@ -504,6 +522,39 @@ providers.
 \includegraphics[width=0.58\textwidth]{results/figures/fig_wedge.pdf}
 \caption{Market price (PUI, public API list prices) vs.\ the LCI cost frontier over time (log scale). The wedge compresses from $\sim$36--53$\times$ to below $1\times$.}
 \label{fig:wedge}
+\end{figure}
+
+\paragraph{Decomposition of the index.}
+The four-quarter panel deliberately separates quality- and cost-driven movements.
+Through 2024Q3 the decline is driven jointly by benchmark-accuracy gains (rising
+$\phi$ via $\alpha$) and falling factor prices. The final segment (2024Q3 to
+2025Q2, IPD $71.1\!\to\!45.8$, about a third of the total fall) holds model
+quality \emph{fixed}---the same Llama-3.1-70B weights and benchmark scores in
+both periods---so it isolates a cost-side move: the sourced $\approx$33\% A100
+on-demand price reduction (\$4.10$\to$\$2.745/GPU-hr) and an assumed decode
+speed-up. We therefore read the headline as a quality-and-cost decline through
+mid-2024 and a cost-only decline thereafter, not a continuous quality gain.
+
+\paragraph{Robustness and uncertainty.}
+Because latency, throughput, and hence $\phi$ flow from the assumed decode rates
+and token counts, we stress-test the index two ways (\texttt{src/sensitivity.py};
+Figure~\ref{fig:sensitivity}). First, a parametric bootstrap over the simulator's
+p95 replication noise gives a 90\% confidence band on the final-period IPD of
+$[41.8,\,45.9]$---tight, reflecting the simulator's precision. Second, and more
+importantly, one-at-a-time perturbation of the load-bearing \emph{assumptions}
+(decode rate $\pm$50\%, token counts $\pm$25\%, softness $\tau\in\{1,4\}$\,s, and
+accuracy-/latency-heavy/equal QoS weights) moves the final-period IPD over
+$[34.9,\,49.2]$. Every scenario still shows a substantial decline from 100, so
+the \emph{qualitative} conclusion---a large fall in the quality-adjusted cost of
+intelligence over 2023--2025---is robust, while the precise magnitude is
+assumption-dependent. This is why we frame the estimate as an illustrative
+single-configuration demonstration rather than an economy-wide measurement.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.62\textwidth]{results/figures/fig_sensitivity.pdf}
+\caption{Sensitivity of the final-period IPD (2025Q2, base $=100$ at 2023Q3) to the load-bearing assumptions. The Monte-Carlo 90\% band (shaded) reflects simulator replication noise; the bars show one-at-a-time perturbations of decode rate, token counts, latency softness, and QoS weights. All scenarios remain well below 100.}
+\label{fig:sensitivity}
 \end{figure}
 
 % ================= 8. Limitations =================
@@ -611,6 +662,6 @@ Assume (i) GI/G/$k$ with processor sharing and micro-batching $(B,\tau_b)$; (ii)
 Provide CSVs for primitives (Table~\ref{tab:primitives}), a JSON parameter file (Table~\ref{tab:calib}), and the estimation scripts. The released pipeline (i) uses the parameters in Table~\ref{tab:calib}, (ii) validates the mapping $u\mapsto W_{0.95}(u)$ against M/M/$k$ Erlang-C, and (iii) recomputes $\LCI$ and $\IPD$ deterministically.
 
 \paragraph{Versioning.}
-Each run stores Git commit hash, data snapshot time, and solver settings. Outputs include $\LCI$ by task family, location comparisons, and uncertainty bands via bootstrap.
+Each run stores environment versions, parameters, and timestamps in \texttt{results/meta.json}. Outputs include $\LCI$ by task family, the IPD with Laspeyres/Paasche bounds, a Monte-Carlo confidence band from the simulator's replication noise, and a structural sensitivity table over the load-bearing assumptions (\texttt{src/sensitivity.py}; Figure~\ref{fig:sensitivity}).
 
 \end{document}

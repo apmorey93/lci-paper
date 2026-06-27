@@ -96,25 +96,17 @@ def lci_curve_for(es_ms, price_gpu_hr, tdp_w, price_kwh, a, fam, op, weights, ta
     return pd.DataFrame(out)
 
 
-def main():
-    TABLES.mkdir(parents=True, exist_ok=True)
-    params = load_params()
+def compute_lci_table(params, hw, acc, api, price_kwh, curve,
+                      decode_scale=1.0, token_scale=1.0):
+    """Compute the per-(date, family) cost-frontier LCI table.
+
+    decode_scale / token_scale perturb the assumed decode rate and per-task
+    output tokens (used by the sensitivity analysis). Returns (df, curve_rows).
+    """
     weights = params["qos_weights"]
     tau = params["latency_softness_tau_ms"]
     op = params["operational"]
     k = params["queue"]["k"]
-
-    hw = pd.read_csv(DATA / "external" / "hardware.csv")
-    acc = pd.read_csv(DATA / "evals" / "accuracy.csv")
-    energy = pd.read_csv(DATA / "external" / "energy_prices.csv")
-    api = pd.read_csv(DATA / "external" / "api_prices.csv")
-
-    price_kwh = float(energy[energy["region"] == params["energy_region"]]["price_usd_per_kwh"].iloc[0])
-
-    print("Running normalised simulation sweep (E[S]=1 ms) ...")
-    curve = normalised_curve(params)
-    curve.to_csv(TABLES / "norm_curve.csv", index=False)
-
     rows, curve_rows = [], []
     for date in sorted(acc["date"].unique()):
         hw_d = hw[hw["date"] == date]
@@ -126,9 +118,11 @@ def main():
             if arow.empty:
                 continue
             a = float(arow["score_pct"].iloc[0]) / 100.0
+            out_tokens = fam["out_tokens"] * token_scale
             best = None
             for _, h in hw_d.iterrows():
-                es_ms = fam["out_tokens"] / float(h["decode_tok_per_s_per_gpu_70b_fp16"]) * 1000.0
+                decode = float(h["decode_tok_per_s_per_gpu_70b_fp16"]) * decode_scale
+                es_ms = out_tokens / decode * 1000.0
                 lc = lci_curve_for(es_ms, float(h["price_usd_per_gpu_hr"]), float(h["tdp_w_per_gpu"]),
                                    price_kwh, a, fam, op, weights, tau, k, curve)
                 if lc.empty:
@@ -153,15 +147,32 @@ def main():
             if not api_d.empty:
                 api_d = api_d.copy()
                 api_d["pui"] = (fam["in_tokens"] * api_d["price_in_usd_per_1m_tok"]
-                                + fam["out_tokens"] * api_d["price_out_usd_per_1m_tok"]) / 1e6
+                                + out_tokens * api_d["price_out_usd_per_1m_tok"]) / 1e6
                 jmin = api_d["pui"].idxmin()
                 best["PUI"] = float(api_d.loc[jmin, "pui"])
                 best["PUI_model"] = api_d.loc[jmin, "model"]
                 best["wedge_x"] = best["PUI"] / best["LCI"]
             rows.append(best)
             curve_rows.append(best_curve)
+    return pd.DataFrame(rows).sort_values(["date", "family"]), curve_rows
 
-    df = pd.DataFrame(rows).sort_values(["date", "family"])
+
+def main():
+    TABLES.mkdir(parents=True, exist_ok=True)
+    params = load_params()
+
+    hw = pd.read_csv(DATA / "external" / "hardware.csv")
+    acc = pd.read_csv(DATA / "evals" / "accuracy.csv")
+    energy = pd.read_csv(DATA / "external" / "energy_prices.csv")
+    api = pd.read_csv(DATA / "external" / "api_prices.csv")
+
+    price_kwh = float(energy[energy["region"] == params["energy_region"]]["price_usd_per_kwh"].iloc[0])
+
+    print("Running normalised simulation sweep (E[S]=1 ms) ...")
+    curve = normalised_curve(params)
+    curve.to_csv(TABLES / "norm_curve.csv", index=False)
+
+    df, curve_rows = compute_lci_table(params, hw, acc, api, price_kwh, curve)
     df.to_csv(TABLES / "lci_by_family.csv", index=False)
     pd.concat(curve_rows, ignore_index=True).to_csv(TABLES / "lci_curves.csv", index=False)
     print(f"[OK] Wrote {TABLES / 'lci_by_family.csv'} ({len(df)} rows)")

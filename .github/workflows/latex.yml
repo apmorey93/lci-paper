@@ -24,8 +24,9 @@ jobs:
           python lci_program.py
           python make_ipd.py
           python figures.py
+          python sensitivity.py
       - name: Assert result tables are deterministic (match committed CSVs)
-        run: git diff --exit-code -- results/tables/lci_by_family.csv results/tables/ipd.csv results/tables/lci_curves.csv results/tables/norm_curve.csv
+        run: git diff --exit-code -- results/tables/lci_by_family.csv results/tables/ipd.csv results/tables/lci_curves.csv results/tables/norm_curve.csv results/tables/sensitivity.csv
 
   paper:
     name: Build paper PDF

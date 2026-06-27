@@ -1,0 +1,11 @@
+scenario,final_IPD_2025Q2
+baseline,45.79
+decode -50%,34.91
+decode +50%,49.0
+tokens -25%,47.98
+tokens +25%,35.74
+tau=1000ms,45.81
+tau=4000ms,45.78
+eta accuracy-heavy,43.26
+eta latency-heavy,48.4
+eta equal,49.21
