@@ -182,13 +182,12 @@ $\alpha$ is the accuracy attainment ratio (capped at target); $\rho,\sigma$ are 
 % ================= 3. Serving Model =================
 \section{Serving Model Class and Latency Mapping}
 \paragraph{Throughput and utilization.}
-We use a reduced form for throughput with an explicit utilization term:
+Peak (saturated) throughput is set by provisioned inputs; realized good throughput is that capacity scaled by utilization:
 \begin{equation}\label{eq:throughput}
-T
-= A_0\,H^{\beta_H} P^{\beta_P} W^{\beta_W} N^{\beta_N} O^{\beta_O}\cdot g(u),\qquad
- g(u)=\left(1-\frac{u}{u_{\max}}\right)^{\gamma},
+T(u) = \underbrace{A_0\,H^{\beta_H} P^{\beta_P} W^{\beta_W} N^{\beta_N} O^{\beta_O}}_{\text{peak capacity }\bar T}\cdot u,
+\qquad u\in[0,u_{\max}],
 \end{equation}
-where $u\in[0,u_{\max})$ is the steady-state utilization implied by the arrival rate and service capacity.
+so realized throughput \emph{increases} with $u$ (more load served per unit time) up to the practical saturation $u_{\max}$. The congestion that accompanies high load is carried by the latency map below (and hence by $\phi$), not by throughput; this is what the validated simulator measures.
 
 \paragraph{Queueing model class.}
 Serving follows GI/G/$k$ with processor sharing (PS) and micro-batching of target size $B\ge1$ under admission timeout $\tau_b$. Let $W_\alpha$ denote the $\alpha$-quantile of response time. We map utilization to latency via $\ell = W_{0.95}(u;B,\tau_b)$ using heavy-traffic approximations valid for many-server regimes.
@@ -324,7 +323,7 @@ Safety & audit pass share & fraction (0--1) & $s$ \\
 \bottomrule
 \end{tabular}
 \begin{tablenotes}[flushleft]
-\item \emph{Note:} Values are placeholders; in practice fill from (i) serving telemetry (utilization, p95 latency, batch sizes), (ii) benchmark panels mapping $(m,R,Z)$ to accuracy, and (iii) location-specific factor prices (energy tariffs, accelerator lease rates, RTTs).
+\item \emph{Note:} This is the input schema; the populated, cited values used here are in \texttt{data/external/} (prices, energy) and \texttt{data/evals/} (accuracy), and p95 latency is measured from the validated simulator (Section~\ref{sec:results}).
 \end{tablenotes}
 \end{threeparttable}
 \end{table}
@@ -332,28 +331,32 @@ Safety & audit pass share & fraction (0--1) & $s$ \\
 \paragraph{Computation.}
 (i) Normalize benchmark instances to task units at QoS thresholds; (ii) calibrate $(\eta_a,\eta_\ell,\eta_q,\eta_s)$ from revealed-preference or declared weights; (iii) estimate $(\zeta_m,\zeta_R,\theta_{\cdot})$ from panel regressions of benchmark scores on $(m,R,Z)$; (iv) map utilization to p95 latency using the serving model; (v) solve the convex surrogate of \eqref{eq:program} to obtain $c_{\mathcal T}$ and compute $\LCI$.
 
-% ---- Table: Stylized calibration example ----
+% ---- Table: Actual parameters used in the reference estimation ----
 \begin{table}[t]
 \centering
 \begin{threeparttable}
-\caption{Stylized calibration snapshot (illustrative)}
+\caption{Parameters used in the reference estimation (from \texttt{data/params.json}).}
 \label{tab:calib}
-\begin{tabular}{l c c c c}
+\begin{tabular}{l l l}
 \toprule
-Parameter & Value & SE & Source & Notes \\
+Parameter & Value & Basis \\
 \midrule
-$\eta_a$ & 1.20 & (0.05) & RP weights & Accuracy elasticity \\
-$\eta_\ell$ & 0.80 & (0.06) & SLA penalties & Latency penalty exponent \\
-$\eta_q$ & 0.50 & (0.04) & Uptime SLAs & Reliability weight \\
-$\eta_s$ & 0.40 & (0.03) & Audit logs & Safety weight \\
-$\zeta_m$ & 0.35 & (0.02) & Scaling panel & Model scale exponent \\
-$\zeta_R$ & 0.28 & (0.03) & Retrieval panel & Retrieval exponent \\
-$\gamma$ & 1.60 & (0.10) & Ops telemetry & Congestion curvature \\
-$u_{\max}$ & 0.92 & -- & Capacity plan & Saturation bound \\
+QoS weights $(\eta_a,\eta_\ell,\eta_q,\eta_s)$ & $(0.5,0.2,0.2,0.1)$ & assumed (policy) \\
+Latency softness $\tau$ & $2000$~ms & assumed \\
+Violation budget $\varepsilon$ & $0.05$ & assumed \\
+Servers $k$, batch $B$ & $4$, $16$ & assumed \\
+Service CoV$^2$ (arrival, service) & $(1.0,\,0.3)$ & assumed \\
+Latency SLO $\bar\ell$ (QA/Reas./Code) & $18/24/36$~s & assumed \\
+Overhead factor & $1.15$ & assumed \\
+Decode rate (70B, A100/H100) & $22$--$50$ tok/s & assumed \\
+Availability $q$, safety $s$ & $0.999$, $0.98$ & assumed \\
+GPU/energy/API prices & see \texttt{data/external/} & sourced (cited) \\
+Benchmark accuracy $a$ & see \texttt{data/evals/} & sourced (cited) \\
+p95 latency $W_{0.95}(u)$ & simulated & validated DES \\
 \bottomrule
 \end{tabular}
 \begin{tablenotes}[flushleft]
-\item \emph{Note:} Values are placeholders for illustration; replace with empirical estimates derived from (i) proprietary serving telemetry, (ii) benchmark panels, and (iii) location-specific factor price data.
+\item \emph{Note:} These are the exact values consumed by the released pipeline (no fitted standard errors are claimed). ``Assumed'' parameters are documented choices; ``sourced'' inputs carry source/url/accessed in the data files; p95 latency is measured from the validated simulator.
 \end{tablenotes}
 \end{threeparttable}
 \end{table}
@@ -544,7 +547,7 @@ Assume (i) GI/G/$k$ with processor sharing and micro-batching $(B,\tau_b)$; (ii)
 
 \section{Empirical Protocol and Reproducible Artifacts}\label{app:empirical}
 \paragraph{Data release.}
-Provide CSVs for primitives (Table~\ref{tab:primitives}), a JSON schema for QoS thresholds, and a configuration file for location prices. Include a notebook that (i) estimates parameters in Table~\ref{tab:calib}, (ii) validates the mapping $u\mapsto W_{0.95}(u)$, and (iii) recomputes $\LCI$ and $\IPD$.
+Provide CSVs for primitives (Table~\ref{tab:primitives}), a JSON parameter file (Table~\ref{tab:calib}), and the estimation scripts. The released pipeline (i) uses the parameters in Table~\ref{tab:calib}, (ii) validates the mapping $u\mapsto W_{0.95}(u)$ against M/M/$k$ Erlang-C, and (iii) recomputes $\LCI$ and $\IPD$ deterministically.
 
 \paragraph{Versioning.}
 Each run stores Git commit hash, data snapshot time, and solver settings. Outputs include $\LCI$ by task family, location comparisons, and uncertainty bands via bootstrap.
