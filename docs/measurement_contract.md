@@ -24,14 +24,21 @@ Y_QATE        = T · φ
 **Throughput `T`.** `T` is the **full serving pool's raw completion throughput,
 before any quality adjustment** — completions per unit time summed over all
 replicas in the pool that `C` covers; one completion = one task attempt.
-**Availability is represented in `g_q` only, never also in `T`:** `T` is taken at
-the nominal up-state and downtime is captured by `g_q` (equivalently, one may
-deflate `T` by uptime and set `g_q ≡ 1`, but not both). `T` and `C` cover the
-**same replicas over the same interval**, so replica scaling cancels in `C/T` and
-is never double-counted.
+**Primary availability convention:** `T` is the **nominal up-state** full-pool
+throughput and contains **no downtime factor**; availability quality enters
+**only** through `g_q`. Using calendar-time throughput with `g_q ≡ 1` defines a
+*different, separately labeled* estimand and **must not be mixed** into the primary
+panel — the two are **not** numerically equal (e.g. at `q̄ = 0.99, q = 0.98`,
+`g_q = 0.5`, whereas an uptime-deflated `T` would carry a `0.98` factor). `T` and
+`C` cover the **same replicas over the same interval**. Replica scaling cancels in
+`C/T` **only under identical-replica linear scaling**; otherwise `T` must be the
+**full-pool simulated/measured** throughput, not a single replica's rate times a
+replica count.
 
-**Domain & normalization.** `a, q, s ∈ [0,1]`, `ℓ ≥ 0`, `κ_ℓ > 0`, and
-`φ ∈ [0,1]`. **One QATE is normalized to one completion at `a = 1` with every
+**Domain & normalization.** `a, q, s ∈ [0,1]`, `ℓ ≥ 0`, references `ℓ̄ > 0` and
+`q̄, s̄ ∈ [0,1)`, `κ_ℓ > 0`, and `φ ∈ [0,1]`. (`ℓ̄ > 0` guarantees the default
+`κ_ℓ = ℓ̄ > 0`; `q̄, s̄ < 1` keep `g_q, g_s` well-defined and in `(0,1]`, hence
+`φ ∈ [0,1]`.) **One QATE is normalized to one completion at `a = 1` with every
 delivery discount equal to 1.** If `φ = 0` (e.g. `a = 0`), then `Y_QATE = 0` and
 `LCI = +∞` — stated exactly, with **no numerical clipping**.
 
@@ -131,8 +138,9 @@ AWS-priced empirics are **Cloud**.)
   availability `q`, safety `s`). It is reported as robustness scenarios and
   **never** labeled statistical uncertainty.
 - **Step-2 data requirement:** each accuracy observation must record the benchmark
-  numerator/denominator (or sample size), the exact protocol/version, and a CI
-  for `a`.
+  numerator/denominator (or sample size), the exact protocol/version, and a CI for
+  `a` **with its confidence level, construction method, and sampling unit** (not
+  merely `N` and interval endpoints).
 
 ## 9. Scope & honesty rules (binding on the empirics)
 - Latency/throughput are **simulated**; the simulator must be **validated for the
