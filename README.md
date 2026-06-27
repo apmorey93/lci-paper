@@ -21,12 +21,18 @@ Every number in the paper traces to one of two honest sources:
    formula.
 2. **Public, cited input data** under `data/` — cloud GPU list prices, EIA
    industrial energy prices, published LLM benchmark scores, and public LLM API
-   list prices. Every row carries a `source`, `url`, and `accessed` date.
+   list prices. These rows carry a `source`, `url`, and `accessed` date.
 
-We do **not** claim to have served a live LLM on a GPU. Latency/throughput are
-*simulated* (clearly labelled); accuracy and prices are *sourced*. If you have
-real serving traces, drop them into `data/evals/latency_schema.csv` and the
-pipeline will consume them.
+Three kinds of inputs, kept distinct:
+- **Modeled (simulated, validated):** latency (p95) and throughput.
+- **Sourced (public, cited):** GPU/energy/API prices and benchmark accuracies.
+- **Assumed (documented, not sourced):** per-GPU decode rates (`decode_assumed=yes`
+  in `hardware.csv`), per-task token counts, service-time variance, availability
+  `q`, and safety `s` (see `data/params.json`).
+
+We do **not** claim to have served a live LLM on a GPU. If you have real serving
+traces, drop them into `data/evals/latency_schema.csv` and the pipeline will
+consume them.
 
 ## Pipeline
 
@@ -65,7 +71,7 @@ interior cost-minimising utilisation `u*`. The reported LCI per `(date, family)`
 is the **minimum over GPU options** — the cost frontier. The market price (PUI)
 comes from public API list prices; the wedge is `PUI / LCI`.
 
-## Data inputs (all public, cited)
+## Data inputs (sourced unless flagged assumed)
 
 - `data/external/hardware.csv` — GPU list prices (AWS p4d/p5), TDP, decode rates.
 - `data/external/energy_prices.csv` — EIA industrial electricity prices.

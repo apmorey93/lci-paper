@@ -1,29 +1,43 @@
-name: Build LaTeX
+name: Build and Reproduce
 on:
   push:
     branches: [ "**" ]
   pull_request:
 
 jobs:
-  latex:
+  reproduce:
+    name: Reproduce results + tests
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: TeX Live cache
-        uses: actions/cache@v4
+      - uses: actions/setup-python@v5
         with:
-          path: /tmp/texlive
-          key: texlive-2025-09
+          python-version: "3.12"
+      - name: Install deps
+        run: pip install -r requirements.txt
+      - name: Unit tests
+        run: python -m pytest tests/ -q
+      - name: Reproduce pipeline (figures + tables) from public inputs
+        run: |
+          cd src
+          python data_integration.py
+          python lci_program.py
+          python make_ipd.py
+          python figures.py
+      - name: Assert result tables are deterministic (match committed CSVs)
+        run: git diff --exit-code -- results/tables/lci_by_family.csv results/tables/ipd.csv results/tables/lci_curves.csv results/tables/norm_curve.csv
+
+  paper:
+    name: Build paper PDF
+    needs: reproduce
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
       - name: Compile PDF
         uses: xu-cheng/latex-action@v3
         with:
           root_file: lci_paper.tex
           latexmk_use_xelatex: false
-          extra_system_packages: chktex
-          pre_compile: |
-            mkdir -p build
-          post_compile: |
-            chktex -q -n1 -n8 -n36 lci_paper.tex || true
       - name: Upload PDF artifact
         uses: actions/upload-artifact@v4
         with:

@@ -1,8 +1,8 @@
 {
-  "_doc": "Parameters for LCI estimation. QoS weights and thresholds follow the paper; operational q,s are documented assumptions (no sourced per-model safety panel). Task token counts are documented assumptions.",
+  "_doc": "Parameters for LCI estimation. QoS weights follow the paper. The phi aggregator uses threshold-normalized sub-functions (=1 at/above target, <1 below): alpha=min(1,a/abar), rho=min(1,(1-qbar)/(1-q)), sigma=min(1,(1-sbar)/(1-s)), lambda=softplus hinge; phi=prod(sub^eta). Operational q,s, decode rates, and token counts are documented ASSUMPTIONS, not sourced. Service-time SCV<1 reflects near-deterministic LLM decode for fixed output length (the M/M/k validation in validate_queue.py uses SCV=1 separately).",
   "qos_weights": {"a": 0.5, "l": 0.2, "q": 0.2, "s": 0.1},
-  "latency_softness_tau_ms": 1500,
-  "violation_budget_eps": 0.01,
+  "latency_softness_tau_ms": 2000,
+  "violation_budget_eps": 0.05,
   "operational": {
     "availability_q": 0.999,
     "safety_s": 0.98,
@@ -10,13 +10,14 @@
     "safety_target_sbar": 0.95,
     "ops_overhead_factor": 1.15
   },
-  "queue": {"k": 4, "batch_size": 16, "batch_timeout_ms": 0.0, "scv_arrival": 1.0, "scv_service": 1.0},
+  "queue": {"k": 4, "batch_size": 16, "batch_timeout_ms": 0.0, "scv_arrival": 1.0, "scv_service": 0.3},
   "families": {
-    "QA":        {"benchmark": "MMLU",      "accuracy_target_abar": 0.80, "out_tokens": 200, "in_tokens": 1000, "latency_target_ms": 8000},
-    "Code":      {"benchmark": "HumanEval", "accuracy_target_abar": 0.50, "out_tokens": 400, "in_tokens": 1500, "latency_target_ms": 16000},
-    "Reasoning": {"benchmark": "GSM8K",     "accuracy_target_abar": 0.70, "out_tokens": 300, "in_tokens": 800,  "latency_target_ms": 12000}
+    "QA":        {"benchmark": "MMLU",      "accuracy_target_abar": 0.80, "out_tokens": 150, "in_tokens": 1000, "latency_target_ms": 18000},
+    "Code":      {"benchmark": "HumanEval", "accuracy_target_abar": 0.50, "out_tokens": 300, "in_tokens": 1500, "latency_target_ms": 36000},
+    "Reasoning": {"benchmark": "GSM8K",     "accuracy_target_abar": 0.70, "out_tokens": 200, "in_tokens": 800,  "latency_target_ms": 24000}
   },
+  "_latency_note": "latency_target_ms are full-completion p95 SLOs for throughput/batch-oriented serving of 70B (not interactive TTFT); tens-of-seconds reflect full generation of 150-300 output tokens at 22-50 tok/s.",
   "energy_region": "us-east-1",
-  "u_grid": [0.40, 0.50, 0.60, 0.70, 0.78, 0.84, 0.88, 0.92, 0.95],
-  "sim": {"n_arrivals": 80000, "warmup": 12000, "replications": 6, "base_seed": 7}
+  "u_grid": [0.40, 0.50, 0.60, 0.70, 0.78, 0.84, 0.88, 0.90, 0.92, 0.94],
+  "sim": {"n_arrivals": 200000, "warmup": 20000, "replications": 12, "base_seed": 7}
 }

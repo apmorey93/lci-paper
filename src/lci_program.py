@@ -90,8 +90,9 @@ def lci_curve_for(es_ms, price_gpu_hr, tdp_w, price_kwh, a, fam, op, weights, ta
         energy_cost = (tdp_w / 1000.0) * (gpu_s_per_task / 3600.0) * price_kwh
         raw = (gpu_cost + energy_cost) * op["ops_overhead_factor"]
         ph = phi(a, p95_ms, fam, op, weights, tau)
+        feasible = p95_ms <= fam["latency_target_ms"]        # QoS latency chance constraint
         out.append({"u": u, "p95_ms": p95_ms, "phi": ph, "raw_cost": raw,
-                    "LCI": raw / max(ph, 1e-9)})
+                    "LCI": raw / max(ph, 1e-9), "feasible": bool(feasible)})
     return pd.DataFrame(out)
 
 
@@ -132,7 +133,10 @@ def main():
                                    price_kwh, a, fam, op, weights, tau, k, curve)
                 if lc.empty:
                     continue
-                imin = lc["LCI"].idxmin()
+                feas = lc[lc["feasible"]]
+                if feas.empty:                 # no utilisation meets the latency SLO
+                    continue
+                imin = feas["LCI"].idxmin()    # cost-min among QoS-feasible u; keep full lc for plotting
                 cand = {"date": date, "family": fam_name, "model": arow["model"].iloc[0],
                         "gpu": h["gpu"], "benchmark": fam["benchmark"], "a": a,
                         "u_star": float(lc.loc[imin, "u"]), "p95_ms": float(lc.loc[imin, "p95_ms"]),

@@ -42,12 +42,14 @@ def fig_qos_latency():
 
 
 def fig_throughput_lci():
-    """Fig 2: throughput and LCI vs utilisation (dual axis), representative slice."""
+    """Fig 2: throughput and LCI vs utilisation (dual axis), with latency-feasibility cap."""
     curves = pd.read_csv(TABLES / "lci_curves.csv")
     norm = pd.read_csv(TABLES / "norm_curve.csv").sort_values("u")
     sl = curves[(curves["date"] == "2025-06-01") & (curves["family"] == "QA")].sort_values("u")
     thru = norm["throughput_req_per_s"].values.astype(float)
     thru = thru / thru.max()
+    feas = sl[sl["feasible"]]
+    ustar = feas.loc[feas["LCI"].idxmin(), "u"] if not feas.empty else sl["u"].max()
     fig, ax1 = plt.subplots(figsize=(5.4, 3.8))
     ax1.plot(sl["u"], thru, "s--", color="#2ca02c", label="Throughput (norm.)")
     ax1.set_xlabel("Utilisation $u$ (fraction of peak throughput)")
@@ -55,10 +57,13 @@ def fig_throughput_lci():
     ax2 = ax1.twinx()
     ax2.plot(sl["u"], sl["LCI"] * 1e3, "o-", color="#1f77b4", label="LCI")
     ax2.set_ylabel(r"LCI ($\times10^{-3}$ \$/task)", color="#1f77b4")
-    ustar = sl.loc[sl["LCI"].idxmin(), "u"]
+    # shade latency-infeasible region (p95 > SLO)
+    infeas = sl[~sl["feasible"]]
+    if not infeas.empty:
+        ax2.axvspan(infeas["u"].min(), sl["u"].max(), color="#d62728", alpha=0.07)
     ax2.axvline(ustar, color="#d62728", ls=":", lw=1)
-    ax2.text(ustar - 0.03, ax2.get_ylim()[1] * 0.9, r"$u^\ast$", color="#d62728")
-    ax1.set_title("Throughput rises, LCI is U-shaped (QA, 2025)")
+    ax2.text(ustar - 0.04, ax2.get_ylim()[1] * 0.9, r"$u^\ast$", color="#d62728")
+    ax1.set_title("LCI falls with utilization; latency SLO caps feasible $u$ (QA, 2025)")
     fig.savefig(FIGS / "fig_throughput_LCI_vs_util.pdf", bbox_inches="tight"); plt.close(fig)
     print("[OK] fig_throughput_LCI_vs_util.pdf")
 
@@ -71,12 +76,15 @@ def fig_lci_curve():
         sl = curves[(curves["date"] == "2025-06-01") & (curves["family"] == fam)].sort_values("u")
         if sl.empty:
             continue
-        ax.plot(sl["u"], sl["LCI"] * 1e3, "o-", color=c, label=fam)
-        imin = sl["LCI"].idxmin()
-        ax.scatter([sl.loc[imin, "u"]], [sl.loc[imin, "LCI"] * 1e3], color=c, s=80,
-                   edgecolor="k", zorder=5)
+        feas = sl[sl["feasible"]]
+        ax.plot(sl["u"], sl["LCI"] * 1e3, "-", color=c, alpha=0.35)
+        ax.plot(feas["u"], feas["LCI"] * 1e3, "o-", color=c, label=fam)
+        if not feas.empty:
+            imin = feas["LCI"].idxmin()
+            ax.scatter([feas.loc[imin, "u"]], [feas.loc[imin, "LCI"] * 1e3], color=c, s=80,
+                       edgecolor="k", zorder=5)
     ax.set_xlabel("Utilisation $u$"); ax.set_ylabel(r"LCI ($\times10^{-3}$ \$/task)")
-    ax.set_title(r"Estimated LCI$(u)$ by task family (2025); $\bullet = u^\ast$")
+    ax.set_title(r"LCI$(u)$ by family (2025); solid = QoS-feasible, $\bullet = u^\ast$ frontier")
     ax.legend(frameon=False)
     fig.savefig(FIGS / "fig_LCI_curve.pdf", bbox_inches="tight"); plt.close(fig)
     print("[OK] fig_LCI_curve.pdf")

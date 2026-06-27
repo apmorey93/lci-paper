@@ -26,9 +26,9 @@
 \renewcommand{\topfraction}{0.90}
 \renewcommand{\bottomfraction}{0.80}
 \renewcommand{\floatpagefraction}{0.80}
-\setcounter{\topnumber}{3}
-\setcounter{\bottomnumber}{2}
-\setcounter{\totalnumber}{4}
+\setcounter{topnumber}{3}
+\setcounter{bottomnumber}{2}
+\setcounter{totalnumber}{4}
 \setlength{\textfloatsep}{10pt plus 2pt minus 2pt}
 \setlength{\floatsep}{8pt plus 2pt minus 2pt}
 \setlength{\intextsep}{8pt plus 2pt minus 2pt}
@@ -125,7 +125,7 @@
 \newpage
 
 % ================= Abstract =================
-\noindent\textbf{Abstract.}\;\;We formalize an estimable measurement object—the \emph{Locational Cost of Intelligence} (LCI)—as the value of a cost-minimization program delivering one task–equivalent unit of AI output at targeted QoS thresholds with violation probability $\varepsilon$. QoS enters through convex surrogates for a joint chance constraint. We show LCI is the ratio of operating cost to quality-adjusted throughput, $\LCI=C/(T\,\phi)$, and is therefore \emph{U-shaped} in utilization: cost-spreading lowers it at light load while QoS erosion raises it near saturation. Serving is modeled using a GI/G/$k$ processor-sharing queue with micro-batching, implemented as a discrete-event simulator that we \emph{validate against the closed-form M/M/$k$ Erlang-C} mean wait (worst-case error $<5\%$). We then estimate LCI for three task families (QA, code, reasoning) over 2023--2025 by combining simulated latency/throughput with \emph{public, cited} inputs—cloud-GPU list prices, EIA energy tariffs, and published Llama-2/3/3.1-70B benchmark scores—and chain them into a Fisher \emph{Intelligence Price Deflator} (IPD). The IPD falls from 100 (2023Q3) to $\approx$48 (2025Q2), a $\sim$52\% decline in the quality-adjusted cost of intelligence; the wedge between market price (public API list prices) and the LCI cost frontier compresses from $\sim$40--50$\times$ to below $1\times$ as hosted commodity tiers emerge. \emph{Scope note:} latency and throughput are simulated (the simulator is validated, not run on live GPUs); accuracy and prices are sourced. All numbers reproduce from public data via the released code.
+\noindent\textbf{Abstract.}\;\;We formalize an estimable measurement object—the \emph{Locational Cost of Intelligence} (LCI)—as the value of a cost-minimization program delivering one task–equivalent unit of AI output at targeted QoS thresholds with violation probability $\varepsilon$. QoS enters through convex surrogates for a joint chance constraint. We show LCI is the ratio of operating cost to quality-adjusted throughput, $\LCI=C/(T\,\phi)$, which \emph{declines with utilization} (fixed cost spread over throughput); the latency chance constraint caps feasible utilization, so the cost-minimizing operating point $u^\ast$ sits at the \emph{latency-feasibility frontier}. Serving is modeled using a GI/G/$k$ processor-sharing queue with micro-batching, implemented as a discrete-event simulator that we \emph{validate against the closed-form M/M/$k$ Erlang-C} mean wait (worst-case error $<5\%$). We then estimate LCI for three task families (QA, code, reasoning) over 2023--2025 by combining simulated latency/throughput with \emph{public, cited} prices and accuracies—cloud-GPU list prices, EIA energy tariffs, and published Llama-2/3/3.1-70B benchmark scores (decode rates, token counts, and reliability/safety are documented assumptions)—and chain them into a Fisher \emph{Intelligence Price Deflator} (IPD). The IPD falls from 100 (2023Q3) to $\approx$46 (2025Q2), a $\sim$54\% decline in the quality-adjusted cost of intelligence; the wedge between market price (public API list prices) and the LCI cost frontier compresses from $\sim$36--53$\times$ to below $1\times$ as hosted commodity tiers emerge. \emph{Scope note:} latency and throughput are simulated (the simulator is validated, not run on live GPUs); prices and benchmark accuracies are sourced. All numbers reproduce from public data via the released code.
 
 \vspace{0.3cm}
 \noindent\textbf{JEL Codes:} D24, L11, O33
@@ -158,18 +158,26 @@ Tokens are intermediate. Output is task–equivalent completions with QoS:
 \begin{equation}
 \QOU
 = T \cdot \phi(a,\ell,q,s),\qquad
-\phi(a,\ell,q,s)=\alpha(a)\,\lambda(\ell)\,\rho(q)\,\sigma(s).
+\phi(a,\ell,q,s)=\alpha(a)^{\eta_a}\,\lambda(\ell)^{\eta_\ell}\,\rho(q)^{\eta_q}\,\sigma(s)^{\eta_s}.
+\label{eq:phi}
 \end{equation}
-with separable, estimable components
+Each sub-function is \emph{threshold-normalized} to $(0,1]$, equal to $1$ when its metric meets or exceeds target and below $1$ otherwise, so $\phi=1$ exactly when all QoS targets are met:
 \begin{align}
-\alpha(a) &= a^{\eta_a}, &
-\rho(q) &= q^{\eta_q}, &
-\sigma(s) &= s^{\eta_s},\\
+\alpha(a) &= \min\!\Big(1,\tfrac{a}{\bar a}\Big), &
+\rho(q) &= \min\!\Big(1,\tfrac{1-\bar q}{1-q}\Big), &
+\sigma(s) &= \min\!\Big(1,\tfrac{1-\bar s}{1-s}\Big),\\
 \lambda(\ell)
-&= \left(\frac{\bar\ell}{\bar\ell+\mathrm{sp}_\tau(\ell-\bar\ell)}\right)^{\eta_\ell},&
-\mathrm{sp}_\tau(z)&=\tau\ln\!\big(1+e^{z/\tau}\big),\ \tau>0,
+&= \frac{\bar\ell}{\bar\ell+\mathrm{sp}_\tau(\ell-\bar\ell)},&
+\mathrm{sp}_\tau(z)&=\tau\ln\!\big(1+e^{z/\tau}\big),\ \tau>0. &&
 \end{align}
-where $\lambda(\ell)$ is a smooth hinge: no penalty at or below $\bar\ell$, continuous penalties above.
+$\alpha$ is the accuracy attainment ratio (capped at target); $\rho,\sigma$ are reliability/safety attainment as the ratio of allowed to actual shortfall; $\lambda$ is a smooth latency hinge (no penalty at or below $\bar\ell$, continuous penalty above). This is exactly the aggregator implemented in the released code; the multiplicative form makes a near-total failure on any one dimension dominate (strong complementarity).
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.52\textwidth]{results/figures/fig_qos_latency.pdf}
+\caption{Latency quality factor $\lambda(\ell)$ for several softness values $\tau$: $\lambda\approx1$ at or below the SLO $\bar\ell$, with a continuous (softplus) penalty above. Smaller $\tau$ approaches a hard SLA cliff.}
+\label{fig:qoslatency}
+\end{figure}
 
 % ================= 3. Serving Model =================
 \section{Serving Model Class and Latency Mapping}
@@ -185,18 +193,18 @@ where $u\in[0,u_{\max})$ is the steady-state utilization implied by the arrival 
 \paragraph{Queueing model class.}
 Serving follows GI/G/$k$ with processor sharing (PS) and micro-batching of target size $B\ge1$ under admission timeout $\tau_b$. Let $W_\alpha$ denote the $\alpha$-quantile of response time. We map utilization to latency via $\ell = W_{0.95}(u;B,\tau_b)$ using heavy-traffic approximations valid for many-server regimes.
 
-\paragraph{Cost identity and the U-shape.}
+\paragraph{Cost identity and the operating point.}
 With operating cost per unit time $C=\sum_j p_j x_j$ and quality-adjusted throughput $\QOU=T(u)\,\phi(u)$, the cost per usable task at utilization $u$ is
 \begin{equation}\label{eq:lci-identity}
 \LCI(u)=\frac{C}{T(u)\,\phi(u)}=\underbrace{\frac{C}{T(u)}}_{\text{raw \$/task}}\cdot\underbrace{\frac{1}{\phi(u)}}_{\text{quality markup}}.
 \end{equation}
-The raw cost $C/T(u)$ \emph{decreases} in $u$ (a fixed resource bill is spread over more throughput), while the quality markup $1/\phi(u)$ \emph{increases} in $u$ (p95 latency rises near saturation, so $\lambda(\ell)$ and hence $\phi$ fall). Their product is U-shaped with an interior cost-minimizing utilization $u^\ast$; near $u_{\max}$ the quality term dominates and $\LCI(u)$ rises convexly (Property~C; Appendix~\ref{app:queue}). Figure~\ref{fig:convex} shows the simulated relationship; the curve is \emph{measured} from the validated discrete-event simulator (Section~\ref{sec:results}), not posited.
+The raw cost $C/T(u)$ \emph{decreases} in $u$ (a fixed resource bill is spread over more throughput), while the quality markup $1/\phi(u)$ \emph{increases} in $u$ (p95 latency rises near saturation, so $\lambda(\ell)$ and hence $\phi$ fall). Over the full utilization range the product is U-shaped; however, the latency chance constraint $\PP(\ell\le\bar\ell)\ge 1-\varepsilon$ binds before the quality-driven upturn, so within the \emph{feasible} region $\LCI(u)$ is decreasing and the cost-minimizing feasible operating point $u^\ast$ sits at the latency-feasibility frontier (empirically $u^\ast\in[0.84,0.90]$; Section~\ref{sec:results}). Beyond $u^\ast$ the QoS constraint is violated (the infeasible region). Figure~\ref{fig:convex} shows the simulated relationship; the curve is \emph{measured} from the validated discrete-event simulator, not posited.
 
 % ---- Figure: Throughput and LCI vs utilization (from simulator) ----
 \begin{figure}[t]
 \centering
 \includegraphics[width=0.62\textwidth]{results/figures/fig_throughput_LCI_vs_util.pdf}
-\caption{Throughput (normalized, increasing) and cost per quality-adjusted task $\LCI(u)$ vs.\ utilization, from the validated GI/G/$k$--PS+batching simulator (QA family, 2025 inputs). Cost-spreading lowers $\LCI$ at light load; QoS erosion raises it near saturation. The minimum defines $u^\ast\approx0.88$.}
+\caption{Throughput (normalized, increasing) and cost per quality-adjusted task $\LCI(u)$ vs.\ utilization, from the validated GI/G/$k$--PS+batching simulator (QA family, 2025 inputs). $\LCI$ falls as fixed cost is spread over throughput; the shaded region marks latency-infeasible utilization (p95 $>\bar\ell$), so the cost-minimizing feasible point $u^\ast$ sits at the feasibility frontier.}
 \label{fig:convex}
 \end{figure}
 
@@ -367,7 +375,7 @@ Paasche/Laspeyres bounds follow. Decompositions separate within-family LCI chang
 \begin{figure}[t]
 \centering
 \includegraphics[width=0.62\textwidth]{results/figures/fig_IPD.pdf}
-\caption{Estimated IPD (chain Fisher, equal weights), base $=100$ at 2023Q3, with Laspeyres and Paasche bounds. The index falls to $\approx$48 by 2025Q2 (Table~\ref{tab:ipd}), a $\sim$52\% decline in the quality-adjusted cost of intelligence, driven by sourced GPU price cuts, faster decoding, and benchmark-accuracy gains.}
+\caption{Estimated IPD (chain Fisher, equal weights), base $=100$ at 2023Q3, with Laspeyres and Paasche bounds. The index falls to $\approx$46 by 2025Q2 (Table~\ref{tab:ipd}), a $\sim$54\% decline in the quality-adjusted cost of intelligence, driven by sourced GPU price cuts, (assumed) faster decoding, and benchmark-accuracy gains.}
 \label{fig:ipd}
 \end{figure}
 
@@ -386,10 +394,14 @@ server-side dynamic batching (max batch $B$, size-triggered). Per-request servic
 time is set as $E[S]=\text{out\_tokens}/\text{decode\_rate}$; because latency
 scales linearly with $E[S]$ and throughput inversely, a single normalized sweep
 rescales exactly to every (date, GPU, family). Defaults: $k{=}4$, $B{=}16$,
-Poisson arrivals, exponential service, QoS weights
-$(\eta_a,\eta_\ell,\eta_q,\eta_s)=(0.5,0.2,0.2,0.1)$, softness $\tau{=}1500$\,ms;
-operational $q{=}0.999$, $s{=}0.98$ are documented assumptions (no sourced
-per-model safety panel). Inputs: AWS p4d/p5 on-demand list prices (A100 \& H100,
+Poisson arrivals, near-deterministic service (squared CoV $0.3$, reflecting
+low decode-time variance for a fixed output length; the M/M/$k$ validation uses
+exponential service separately), QoS weights
+$(\eta_a,\eta_\ell,\eta_q,\eta_s)=(0.5,0.2,0.2,0.1)$, softness $\tau{=}2000$\,ms,
+full-completion p95 latency SLOs $\bar\ell\in\{18,24,36\}$\,s for QA/Reasoning/Code,
+violation budget $\varepsilon{=}0.05$. Decode rates, per-task token counts, and
+operational $q{=}0.999$, $s{=}0.98$ are documented assumptions (not sourced).
+Inputs: AWS p4d/p5 on-demand list prices (A100 \& H100,
 incl.\ the June-2025 H100 price cut), EIA industrial energy tariffs, and
 published Llama-2/3/3.1-70B scores (MMLU/HumanEval/GSM8K) mapped to the QA/code/
 reasoning families. Sources and access dates are in \texttt{data/external/} and
@@ -409,14 +421,17 @@ $u\in\{0.5,0.7,0.85,0.95\}$ with worst-case relative error $4.8\%$
 \end{figure}
 
 \paragraph{LCI curves and the cost-minimizing utilization.}
-Across families, $\LCI(u)$ is U-shaped with interior minimizer $u^\ast\approx0.88$
-(Figure~\ref{fig:lcicurve}). The reported LCI for each (date, family) is the
-minimum over available GPU options—the cost frontier.
+Across families, $\LCI(u)$ declines with utilization within the QoS-feasible
+region; the latency chance constraint caps feasible $u$, so the cost-minimizing
+operating point $u^\ast$ sits at the latency-feasibility frontier
+($u^\ast\in[0.84,0.90]$ here; Figure~\ref{fig:lcicurve}). The reported LCI for
+each (date, family) is the minimum over available GPU options at $u^\ast$—the
+cost frontier.
 
 \begin{figure}[t]
 \centering
 \includegraphics[width=0.58\textwidth]{results/figures/fig_LCI_curve.pdf}
-\caption{Estimated $\LCI(u)$ by task family (2025 inputs); markers denote the cost-minimizing utilization $u^\ast$.}
+\caption{$\LCI(u)$ by task family (2025 inputs); solid segments are QoS-feasible (p95 $\le\bar\ell$), faded segments infeasible, and markers denote the cost-minimizing feasible point $u^\ast$ at the latency-feasibility frontier.}
 \label{fig:lcicurve}
 \end{figure}
 
@@ -429,20 +444,20 @@ minimum over available GPU options—the cost frontier.
 \toprule
 Family & 2023Q3 & 2024Q2 & 2024Q3 & 2025Q2 \\
 \midrule
-QA (MMLU)        & 1.28 & 1.08 & 1.02 & 0.65 \\
-Code (HumanEval) & 3.08 & 2.14 & 2.04 & 1.31 \\
-Reasoning (GSM8K)& 1.98 & 1.61 & 1.53 & 0.98 \\
+QA (MMLU)        & 0.73 & 0.60 & 0.56 & 0.36 \\
+Code (HumanEval) & 1.74 & 1.18 & 1.11 & 0.71 \\
+Reasoning (GSM8K)& 1.00 & 0.79 & 0.74 & 0.48 \\
 \bottomrule
 \end{tabular}
 \begin{tablenotes}[flushleft]
-\item \emph{Note:} Self-hosted Llama-70B frontier; latency/throughput simulated, prices/accuracy sourced. Frontier GPU is A100-class throughout (lower \$/token than H100 at these assumptions). Full per-row detail (GPU, $a$, p95, $\phi$, PUI, wedge) in \texttt{results/tables/lci\_by\_family.csv}.
+\item \emph{Note:} Self-hosted Llama-70B frontier at $u^\ast$; latency/throughput simulated, prices/accuracy sourced (decode rates, token counts, $q$, $s$ assumed). Frontier GPU is A100-class throughout (lower \$/token than H100 at these assumptions). Full per-row detail (GPU, $a$, p95, $\phi$, PUI, wedge) in \texttt{results/tables/lci\_by\_family.csv}.
 \end{tablenotes}
 \end{threeparttable}
 \end{table}
 
 \paragraph{The Intelligence Price Deflator.}
 Chaining the family LCIs (Table~\ref{tab:lci}) gives the IPD in Table~\ref{tab:ipd}
-and Figure~\ref{fig:ipd}: a fall from 100 to $\approx$48 over 2023Q3--2025Q2.
+and Figure~\ref{fig:ipd}: a fall from 100 to $\approx$46 over 2023Q3--2025Q2 (a $\sim$54\% decline).
 
 \begin{table}[t]
 \centering
@@ -453,9 +468,9 @@ and Figure~\ref{fig:ipd}: a fall from 100 to $\approx$48 over 2023Q3--2025Q2.
 \toprule
  & 2023Q3 & 2024Q2 & 2024Q3 & 2025Q2 \\
 \midrule
-Fisher (IPD) & 100.0 & 78.0 & 74.2 & 47.6 \\
-Laspeyres    & 100.0 & 78.2 & 74.4 & 47.7 \\
-Paasche      & 100.0 & 77.7 & 73.9 & 47.4 \\
+Fisher (IPD) & 100.0 & 75.6 & 71.1 & 45.8 \\
+Laspeyres    & 100.0 & 75.9 & 71.3 & 45.9 \\
+Paasche      & 100.0 & 75.4 & 70.8 & 45.6 \\
 \bottomrule
 \end{tabular}
 \begin{tablenotes}[flushleft]
@@ -466,7 +481,7 @@ Paasche      & 100.0 & 77.7 & 73.9 & 47.4 \\
 
 \paragraph{The market wedge.}
 Comparing the LCI frontier with public API list prices (PUI), the wedge
-$\text{PUI}/\LCI$ falls from $\sim$40--50$\times$ in 2023 (GPT-4-era pricing)
+$\text{PUI}/\LCI$ falls from $\sim$36--53$\times$ in 2023 (GPT-4-era pricing)
 to below $1\times$ by mid-2024 (Figure~\ref{fig:wedge}). A wedge below one means
 hosted commodity tiers (e.g., GPT-4o-mini) are priced below our self-hosted
 Llama-70B frontier—reflecting smaller/cheaper served models, provider scale
@@ -478,7 +493,7 @@ providers.
 \begin{figure}[t]
 \centering
 \includegraphics[width=0.58\textwidth]{results/figures/fig_wedge.pdf}
-\caption{Market price (PUI, public API list prices) vs.\ the LCI cost frontier over time (log scale). The wedge compresses from $\sim$40--50$\times$ to below $1\times$.}
+\caption{Market price (PUI, public API list prices) vs.\ the LCI cost frontier over time (log scale). The wedge compresses from $\sim$36--53$\times$ to below $1\times$.}
 \label{fig:wedge}
 \end{figure}
 
@@ -494,13 +509,13 @@ LCI prices what matters operationally: the cost per unit of usable intelligence 
 % ================= References =================
 \begin{thebibliography}{}
 \bibitem[Byrne and Syverson(2017)]{Byrne2017}
-Byrne, D.\ M., and C.\ Syverson. 2017. ``Prices of Computing and Communication Equipment.'' \emph{American Economic Review} 107(5): 168--172.
+Byrne, D.\ M., and C.\ Syverson. 2017. ``Prices of High-Tech Products, Mismeasurement, and the Pace of Innovation.'' \emph{American Economic Review} 107(5): 168--172.
 
 \bibitem[Pakes(2003)]{Pakes2003}
 Pakes, A. 2003. ``A Reconsideration of Hedonic Price Indexes with an Application to PCs.'' \emph{American Economic Review} 93(5): 1578--1596.
 
 \bibitem[Triplett(1989)]{Triplett1989}
-Triplett, J.\ E. 1989. ``Price Indexes for Military Electronics: A Hedonic Approach.'' \emph{Brookings Papers on Economic Activity, Microeconomics}: 373--438.
+Triplett, J.\ E. 1989. ``Price and Technological Change in a Capital Good: A Survey of Research on Computers.'' \emph{Brookings Papers on Economic Activity: Microeconomics}: 373--438.
 \end{thebibliography}
 
 % ================= Appendices =================
