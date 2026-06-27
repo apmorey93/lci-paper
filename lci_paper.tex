@@ -118,7 +118,7 @@
 \thispagestyle{plain}
 
 % ================= Abstract =================
-\noindent\textbf{Abstract.}\;\;We formalize an estimable measurement object---the \emph{Locational Cost of Intelligence} (LCI)---as the value of a cost-minimization program delivering one task--equivalent unit of AI output at targeted QoS thresholds with violation probability $\varepsilon$. QoS enters through convex surrogates for a joint chance constraint. We show LCI is the ratio of operating cost to quality-adjusted throughput, $\LCI=C/(T\,\phi)$, which \emph{declines with utilization} (fixed cost spread over throughput); the latency chance constraint caps feasible utilization, so the cost-minimizing operating point $u^\ast$ sits at the \emph{latency-feasibility frontier}. Serving is modeled using a GI/G/$k$ processor-sharing queue with micro-batching, implemented as a discrete-event simulator that we \emph{validate against the closed-form M/M/$k$ Erlang-C} mean wait (worst-case error $<5\%$). We then estimate LCI for three task families (QA, code, reasoning) over 2023--2025 by combining simulated latency/throughput with \emph{public, cited} prices and accuracies---cloud-GPU list prices, EIA energy tariffs, and published Llama-2/3/3.1-70B benchmark scores (decode rates, token counts, and reliability/safety are documented assumptions)---and chain them into a Fisher \emph{Intelligence Price Deflator} (IPD). In an \emph{illustrative single-configuration} estimation (one open 70B model family, three task families, four quarters, one region), the IPD falls from 100 (2023Q3) to $\approx$46 (2025Q2); a sensitivity analysis varying the assumed decode rates ($\pm$50\%), token counts, latency softness, and QoS weights leaves a substantial decline intact (final-period IPD in $[35,49]$), so we read the result as a robust \emph{qualitative} fall in the quality-adjusted cost of intelligence rather than a precise economy-wide estimate. The wedge between market price (public API list prices) and the LCI cost frontier compresses from $\sim$36--53$\times$ to below $1\times$ as hosted commodity tiers emerge. \emph{Scope note:} latency and throughput are simulated (the simulator is validated, not run on live GPUs); prices and benchmark accuracies are sourced; decode rates, token counts, and reliability/safety are documented assumptions. All numbers reproduce from public data via the released code.
+\noindent\textbf{Abstract.}\;\;We formalize an estimable measurement object---the \emph{Locational Cost of Intelligence} (LCI)---as the value of a cost-minimization program delivering one task--equivalent unit of AI output at targeted QoS thresholds with violation probability $\varepsilon$. QoS enters through convex surrogates for a joint chance constraint. We show LCI is the ratio of operating cost to quality-adjusted throughput, $\LCI=C/(T\,\phi)$, which \emph{declines with utilization} (fixed cost spread over throughput); the latency chance constraint caps feasible utilization, so the cost-minimizing operating point $u^\ast$ sits at the \emph{latency-feasibility frontier}. Serving is modeled using a GI/G/$k$ processor-sharing queue with micro-batching, implemented as a discrete-event simulator that we \emph{validate against the closed-form M/M/$k$ Erlang-C} mean wait (worst-case error $<5\%$). We then estimate LCI for three task families (QA, code, reasoning) over 2023--2025 by combining simulated latency/throughput with \emph{public, cited} prices and accuracies---cloud-GPU list prices, EIA energy tariffs, and published Llama-2/3/3.1-70B benchmark scores (decode rates, token counts, and reliability/safety are documented assumptions)---and chain them into a Fisher \emph{Intelligence Price Deflator} (IPD). In an \emph{illustrative single-configuration} estimation (one open 70B model family, three task families, four quarters, one region), the IPD falls from 100 (2023Q3) to $\approx$46 (2025Q2); a sensitivity analysis varying the assumed decode rates ($\pm$50\%), token counts, latency softness, and QoS weights leaves a substantial decline intact (final-period IPD in $[43,49]$ across all QoS-feasible perturbations; sufficiently adverse latency assumptions instead render the early period QoS-infeasible rather than reversing the decline), so we read the result as a robust \emph{qualitative} fall in the quality-adjusted cost of intelligence rather than a precise economy-wide estimate. The wedge between market price (public API list prices) and the LCI cost frontier compresses from $\sim$36--53$\times$ to below $1\times$ by 2024Q3 as hosted commodity tiers emerge. \emph{Scope note:} latency and throughput are simulated (the simulator is validated, not run on live GPUs); prices and benchmark accuracies are sourced; decode rates, token counts, and reliability/safety are documented assumptions. All numbers reproduce from public data via the released code.
 
 \vspace{0.3cm}
 \noindent\textbf{Keywords:} AI economics; hedonic price index; quality of service; queueing; chance constraints; productivity measurement.\\
@@ -539,21 +539,30 @@ mid-2024 and a cost-only decline thereafter, not a continuous quality gain.
 Because latency, throughput, and hence $\phi$ flow from the assumed decode rates
 and token counts, we stress-test the index two ways (\texttt{src/sensitivity.py};
 Figure~\ref{fig:sensitivity}). First, a parametric bootstrap over the simulator's
-p95 replication noise gives a 90\% confidence band on the final-period IPD of
-$[41.8,\,45.9]$---tight, reflecting the simulator's precision. Second, and more
-importantly, one-at-a-time perturbation of the load-bearing \emph{assumptions}
-(decode rate $\pm$50\%, token counts $\pm$25\%, softness $\tau\in\{1,4\}$\,s, and
-accuracy-/latency-heavy/equal QoS weights) moves the final-period IPD over
-$[34.9,\,49.2]$. Every scenario still shows a substantial decline from 100, so
-the \emph{qualitative} conclusion---a large fall in the quality-adjusted cost of
-intelligence over 2023--2025---is robust, while the precise magnitude is
-assumption-dependent. This is why we frame the estimate as an illustrative
-single-configuration demonstration rather than an economy-wide measurement.
+p95 replication noise gives a 90\% band on the final-period IPD of $[41.8,\,45.9]$;
+this band is a statement about \emph{simulation/numerical} precision (and discrete
+shifts in the selected $u^\ast$), not about economic uncertainty, and its narrowness
+should be read as a non-result. The economically meaningful uncertainty is structural:
+one-at-a-time perturbation of the load-bearing \emph{assumptions} (decode rate
+$\pm$50\%, token counts $\pm$25\%, softness $\tau\in\{1,4\}$\,s, accuracy-/latency-heavy/equal
+QoS weights) leaves the final-period IPD in $[43.3,\,49.2]$ across all scenarios for
+which the index is well defined---a robust 51--57\% decline. Notably, the most
+adverse assumptions (a large decode cut, longer outputs, or their joint move, which
+inflate the per-request service time by up to $2.5\times$) do not \emph{reverse} the
+decline; instead they push the slow 2023 baseline against the latency-feasibility
+frontier so that no utilization meets the SLO and the index is undefined that period.
+The qualitative conclusion---a large fall in the quality-adjusted cost of intelligence
+over 2023--2025---therefore cannot be assumption-tuned away, though the precise
+magnitude is assumption-dependent; this is why we frame the estimate as an
+illustrative single-configuration demonstration rather than an economy-wide
+measurement. We also note that the cost-side driver is conservative: we use
+on-demand list prices, so committed-use or spot pricing would only deepen the
+measured decline.
 
 \begin{figure}[t]
 \centering
 \includegraphics[width=0.62\textwidth]{results/figures/fig_sensitivity.pdf}
-\caption{Sensitivity of the final-period IPD (2025Q2, base $=100$ at 2023Q3) to the load-bearing assumptions. The Monte-Carlo 90\% band (shaded) reflects simulator replication noise; the bars show one-at-a-time perturbations of decode rate, token counts, latency softness, and QoS weights. All scenarios remain well below 100.}
+\caption{Sensitivity of the final-period IPD (2025Q2, base $=100$ at 2023Q3) to the load-bearing assumptions. The Monte-Carlo 90\% band (shaded) reflects simulator/numerical precision; the bars show the QoS-feasible perturbations of decode rate, token counts, latency softness, and QoS weights. Adverse scenarios that inflate service time enough to break 2023 latency feasibility (index undefined) are omitted rather than shown as a decline. All feasible scenarios remain well below 100.}
 \label{fig:sensitivity}
 \end{figure}
 

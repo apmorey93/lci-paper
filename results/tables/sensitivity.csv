@@ -1,11 +1,13 @@
-scenario,final_IPD_2025Q2
-baseline,45.79
-decode -50%,34.91
-decode +50%,49.0
-tokens -25%,47.98
-tokens +25%,35.74
-tau=1000ms,45.81
-tau=4000ms,45.78
-eta accuracy-heavy,43.26
-eta latency-heavy,48.4
-eta equal,49.21
+scenario,final_IPD_2025Q2,qos_feasible
+baseline,45.79,True
+decode -50%,,False
+decode +50%,49.0,True
+tokens -25%,47.98,True
+tokens +25%,,False
+decode -50% & tokens +25%,,False
+decode +50% & tokens -25%,49.15,True
+tau=1000ms,45.81,True
+tau=4000ms,45.78,True
+eta accuracy-heavy,43.26,True
+eta latency-heavy,48.4,True
+eta equal,49.21,True
