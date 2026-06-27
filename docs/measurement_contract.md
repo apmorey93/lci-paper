@@ -3,8 +3,8 @@
 **DRAFT — NO EMPIRICAL RESULT CURRENTLY VALID.** Defines the *primary* (soft,
 quality-adjusted) estimand. Supersedes the joint chance-constraint formulation
 for the empirical index. The prior "≈54% decline" and all wedge magnitudes are
-withdrawn pending reconstruction under this contract (see `STATUS.md`).
-This text is awaiting a final review before any code or empirical work begins.
+withdrawn pending reconstruction (see `STATUS.md`). Awaiting final sign-off before
+any code or empirical work.
 
 ## 1. Estimand
 For a (task family `k`, location, period `t`) configuration,
@@ -12,100 +12,134 @@ For a (task family `k`, location, period `t`) configuration,
 LCI = C / Y_QATE        [USD per quality-adjusted task-equivalent, USD/QATE]
 ```
 `C` = operating cost per unit time; `Y_QATE` = quality-adjusted task-equivalents
-produced per unit time. LCI is a **supply-side unit cost of usable output** — not
-a market price, and not an eligibility-gated quantity.
+per unit time. LCI is a **supply-side unit cost of usable output** — not a market
+price, not eligibility-gated. `C` and `Y_QATE` (via `T`) must cover the **same
+serving pool over the same time interval**.
 
 ## 2. Output unit (QATE) and the quality index
-Raw throughput `T` (completions/hour) is converted to task-equivalents by a
-**declared separable quality index** `φ ∈ (0, 1]`:
 ```
-φ(a, ℓ, q, s) = a · g_ℓ(ℓ)^{η_ℓ} · g_q(q)^{η_q} · g_s(s)^{η_s}
+φ(a, ℓ, q, s) = a · g_ℓ(ℓ) · g_q(q) · g_s(s)          (primary: unit exponents)
 Y_QATE        = T · φ
 ```
-- `a` enters **linearly, with no reference and no exponent**: when the accuracy
-  metric is a **fixed-protocol success/pass rate** (e.g. HumanEval pass@1, MMLU
-  accuracy under a fixed shot/decoding protocol), `a` is the **empirical expected
-  task yield** — the fraction of attempts that produce a correct completion. This
-  interpretation is used **only** when that fixed-protocol condition holds.
-- `g_ℓ, g_q, g_s ∈ (0,1]` are delivery-quality discounts relative to references,
-  each **= 1 exactly at or beyond its reference** and `< 1` below (capped at 1
-  above — no credit for exceeding).
-- **φ is a declared separable quality index, NOT a joint success probability.**
-  We do not interpret `φ` as `P(all QoS dimensions jointly met)`; a probabilistic
-  reading requires independence or joint-outcome data, which we do not have.
-- Interpretive note: if completions were retried **independently** until success,
-  the expected attempts per usable completion would be `≈ 1/a`. We state this only
-  as intuition; the estimate assumes no such independent-retry process.
+**Domain & normalization.** `a, q, s ∈ [0,1]`, `ℓ ≥ 0`, `κ_ℓ > 0`, and
+`φ ∈ [0,1]`. **One QATE is normalized to one completion at `a = 1` with every
+delivery discount equal to 1.** If `φ = 0` (e.g. `a = 0`), then `Y_QATE = 0` and
+`LCI = +∞` — stated exactly, with **no numerical clipping**.
 
-## 3. Reference levels (references, NOT constraints; latency/availability/safety only)
-`(ℓ̄, q̄, s̄)` are declared, use-case reference levels for p95 latency,
-availability, and safety. They mark where each delivery discount saturates
-(`g_i = 1`), not eligibility; they are reported, varied in sensitivity, and
-**never used to drop observations** in the primary index. **Accuracy has no
-reference** in the primary estimate.
+- `a` enters **linearly, no reference, no exponent**: admissible as the
+  **empirical expected task yield** *only* when the accuracy metric is a
+  **fixed-protocol success/pass rate** (fixed shot count / decoding / version).
+- `g_ℓ, g_q, g_s ∈ [0,1]` are delivery-quality discounts, **= 1 on the acceptable
+  side of the reference** (`ℓ ≤ ℓ̄`, `q ≥ q̄`, `s ≥ s̄`) and **< 1 on the adverse
+  side** (capped at 1 — no credit for exceeding a reference).
+- **`φ` is a declared separable quality index, NOT a joint success probability.**
+  A probabilistic reading would require independence or joint-outcome data, which
+  we do not have. (Intuition only: under *independent* retries the expected
+  attempts per usable completion would be `≈ 1/a`; the estimate assumes no such
+  process.)
+
+**Delivery exponents.** Primary specification uses **unit exponents
+`η_ℓ = η_q = η_s = 1`**, so each declared function is a direct multiplicative
+discount. Any weighted/elasticity variant (`g_i^{η_i}`, `η_i ≠ 1`) is a
+**normative utility parameter**: it is treated as a *robustness scenario* and may
+become primary only with separate sign-off.
+
+## 3. References (acceptable-side saturation; latency/availability/safety only)
+`(ℓ̄, q̄, s̄)` are declared, use-case references marking where each delivery
+discount saturates at 1 on the acceptable side. They are **not** eligibility
+tests and are **never** used to drop observations in the primary index; they are
+reported and varied in sensitivity. **Accuracy has no reference.**
 
 ## 4. Quality functions (declared)
 ```
-g_ℓ(ℓ) = exp[ − max(0, ℓ − ℓ̄) / κ_ℓ ]      # = 1 for ℓ ≤ ℓ̄; smooth decay above
-g_q(q) = min(1, (1 − q̄) / (1 − q))           # availability: tolerated/actual downtime
-g_s(s) = min(1, (1 − s̄) / (1 − s))           # safety: same form
+g_ℓ(ℓ) = exp[ − max(0, ℓ − ℓ̄) / κ_ℓ ]    # = 1 for ℓ ≤ ℓ̄; continuous exponential
+                                          #   decay above ℓ̄ (kinked at ℓ̄, i.e.
+                                          #   continuous but not differentiable there)
+g_q(q) = min(1, (1 − q̄)/(1 − q)),  q < 1;   g_q(1) = 1   (convention)
+g_s(s) = min(1, (1 − s̄)/(1 − s)),  s < 1;   g_s(1) = 1   (convention)
 ```
-`κ_ℓ` (latency softness) is **predeclared** (default `κ_ℓ = ℓ̄`, i.e. one e-fold of
-discount per SLO-worth of overrun) and **included in the sensitivity analysis**.
+`κ_ℓ` (latency softness) is **predeclared** (default `κ_ℓ = ℓ̄`) and **included in
+the sensitivity analysis**. The `g_q(1)=g_s(1)=1` conventions avoid division by
+zero at perfect availability/safety.
 
-## 5. Weighting
-- **Within `φ`:** delivery weights `η_ℓ, η_q, η_s ≥ 0`, `Σ η = 1`, **declared**
-  (default equal = 1/3 each; reported with sensitivity). Accuracy carries no
-  weight parameter (it is linear).
-- **Across families and time — fixed-weight chained geometric LCI index:**
+## 5. Weighting & aggregation — fixed-weight chained geometric LCI index
 ```
-  I_t / I_{t-1} = ∏_k ( LCI_{k,t} / LCI_{k,t-1} )^{w_k},     Σ_k w_k = 1
+I_t / I_{t-1} = ∏_k ( LCI_{k,t} / LCI_{k,t-1} )^{w_k},     Σ_k w_k = 1
 ```
-  with **equal, fixed** family weights `w_k` (reported with sensitivity). This is
-  a **fixed-weight chained geometric LCI index** — explicitly **NOT** a Fisher,
-  superlative, or expenditure-weighted index, and Laspeyres/Paasche bounds do not
-  apply. Uncertainty is reported via weight and assumption sensitivity, not via
-  index-number bounds.
+with **equal, fixed** family weights `w_k`, reported with sensitivity. This is a
+**fixed-weight chained geometric LCI index** — explicitly **NOT** Fisher,
+superlative, or expenditure-weighted; Laspeyres/Paasche bounds do not apply.
 
-## 6. Cost
-`C` is the full operating cost of one serving **replica** per unit time:
+**Balanced-panel and missing-data rule.**
+- `I₀ = 100`.
+- The family set `K` and weights `w_k` are fixed **before** computation.
+- Every published link requires a **valid LCI for every `k ∈ K` in both periods**.
+- Missing families are **never** carried forward, silently dropped, or followed by
+  weight renormalization. **If the balanced link is unavailable, the index is not
+  reported for that interval.**
+
+## 6. Cost — two mutually exclusive regimes (never blended)
 ```
-C = (GPUs_per_replica × GPU_price) + energy + overhead,   summed over replicas
+Cloud:  C = replicas × ( instance_price_per_hour + separately_billed_services )
+Owned:  C = replicas × ( annualized_hardware_host_cost_per_hour
+                       + PUE × power_kW × energy_price_per_kWh
+                       + facility/network/operations_cost_per_hour )
 ```
-Per-GPU prices are multiplied by GPUs-per-replica (instance-level pricing);
-energy scales with GPU count and power. (Corrects the prior per-GPU undercount.)
+Cloud instance prices **already embed energy and facilities**, so EIA energy is
+**not** added in the Cloud regime (adding it double-counts). The Owned regime
+prices energy explicitly via PUE. A single observation uses exactly one regime;
+the two are never mixed. (The current AWS-priced empirics are **Cloud**.)
 
 ## 7. Eligibility — primary vs. SLA variant
 - **Primary LCI / LCI index:** no hard eligibility; every observation contributes
   via `φ`.
-- **SLA-constrained LCI (optional, deferred):** restricts to configurations
-  meeting all references with a stated tail probability; **requires per-metric
-  distributions, not point values.** Reported only where every period has
-  qualifying observations; **not used for the cross-vintage index** under current
-  evidence. The chance-constraint / CVaR / Bonferroni / `ε` apparatus belongs
-  only to this variant and is removed from the empirical contribution otherwise.
+- **SLA-constrained LCI (deferred, and re-specified):** a hard-eligibility variant
+  requires **either joint-outcome data, or an explicitly allocated marginal
+  violation budget (`Σ_i ε_i ≤ ε`) enforced by a union bound.** Per-metric
+  marginal distributions **alone do not identify a joint chance constraint.**
+  Reported only where every period has qualifying observations; **not used for the
+  cross-vintage index** under current evidence.
+- **Retired as invalid (not merely deferred):** the previous nonnegative-loss
+  `CVaR(L) ≤ 0` formulation — with `L ≥ 0` it forbids *all* loss rather than an
+  `ε`-tail, so it never represented the chance constraint. It is removed.
 
-## 8. Scope & honesty rules (binding on the empirics)
+## 8. Uncertainty vs. robustness (kept strictly separate)
+- **Statistical uncertainty** is propagated *separately* for two sources and is
+  the only thing called "uncertainty": (i) **accuracy `a`** — from the benchmark
+  numerator/denominator (or sample size) as a confidence interval; (ii)
+  **simulated latency** — from simulation replications. The two are propagated
+  independently into LCI.
+- **Robustness sensitivity** is variation of *declared assumptions* (references,
+  `κ_ℓ`, delivery exponents, family weights, token counts, decode rates). It is
+  reported as robustness scenarios and **never** labeled statistical uncertainty.
+- **Step-2 data requirement:** each accuracy observation must record the benchmark
+  numerator/denominator (or sample size), the exact protocol/version, and a CI
+  for `a`.
+
+## 9. Scope & honesty rules (binding on the empirics)
 - Latency/throughput are **simulated**; the simulator must be **validated for the
-  operating regime actually used** (batch size, service-time variance, p95) or the
-  claim narrowed to exactly what is validated. "Processor sharing" must be labeled
-  accurately (the implementation is bulk-service), and the `u` axis must be named
-  as offered-load / fraction-of-peak, not measured server utilization.
+  regime actually used** (batch size, service-time variance, p95) or the claim
+  narrowed to exactly what is validated. The serving model must be **labeled
+  accurately** (the implementation is bulk-service, **not** processor sharing),
+  and the `u` axis named as **offered load / fraction of peak**, not measured
+  server utilization. Numerical clipping that hides `φ = 0` is disallowed.
 - Prices and benchmark accuracies are **sourced**; decode rates, token counts,
   references, weights, and `κ_ℓ` are **declared assumptions**.
-- The benchmark panel must be **comparable across periods**: one model variant
-  (e.g. all instruction-tuned), a fixed evaluation protocol (fixed shot count /
-  decoding) per metric, and `a` admissible as expected yield only under that
-  fixed protocol. Mixed base/instruct or shot settings are disallowed.
+- The benchmark panel must be **comparable across periods**: one model variant,
+  fixed evaluation protocol per metric; `a` admissible as yield only under that
+  protocol. Mixed base/instruct or shot settings are disallowed.
 - `PUI / LCI` is reported **only for QoS-matched products**.
 
 ---
 
-## Resolved decisions (sign-off received)
-1. **Accuracy:** `g_a = a` (linear; no `ā`, no exponent); valid only for
-   fixed-protocol success-rate metrics. ✔
+## Resolved decisions (sign-off received / pending final read)
+1. **Accuracy:** `g_a = a` (linear; no `ā`, no exponent); fixed-protocol only. ✔
 2. **Above-reference:** capped at 1. ✔
-3. **Family weights:** equal, fixed, with sensitivity; index is the fixed-weight
-   chained geometric LCI index in §5 (not Fisher/superlative/expenditure-weighted). ✔
+3. **Index:** fixed-weight chained geometric LCI index (§5) with the balanced-panel
+   rule; not Fisher/superlative/expenditure-weighted. ✔
 4. **Latency:** `g_ℓ = exp[−max(0, ℓ−ℓ̄)/κ_ℓ]`; `κ_ℓ` predeclared and in
    sensitivity. ✔
+5. **Delivery exponents:** unit (`η = 1`) in the primary estimate; weighted
+   variants are normative/robustness only. ✔ (new, per review)
+6. **Cost:** two mutually exclusive regimes (Cloud / Owned); no energy
+   double-count. ✔ (new, per review)
