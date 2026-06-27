@@ -21,6 +21,15 @@ serving pool over the same time interval**.
 φ(a, ℓ, q, s) = a · g_ℓ(ℓ) · g_q(q) · g_s(s)          (primary: unit exponents)
 Y_QATE        = T · φ
 ```
+**Throughput `T`.** `T` is the **full serving pool's raw completion throughput,
+before any quality adjustment** — completions per unit time summed over all
+replicas in the pool that `C` covers; one completion = one task attempt.
+**Availability is represented in `g_q` only, never also in `T`:** `T` is taken at
+the nominal up-state and downtime is captured by `g_q` (equivalently, one may
+deflate `T` by uptime and set `g_q ≡ 1`, but not both). `T` and `C` cover the
+**same replicas over the same interval**, so replica scaling cancels in `C/T` and
+is never double-counted.
+
 **Domain & normalization.** `a, q, s ∈ [0,1]`, `ℓ ≥ 0`, `κ_ℓ > 0`, and
 `φ ∈ [0,1]`. **One QATE is normalized to one completion at `a = 1` with every
 delivery discount equal to 1.** If `φ = 0` (e.g. `a = 0`), then `Y_QATE = 0` and
@@ -73,10 +82,15 @@ superlative, or expenditure-weighted; Laspeyres/Paasche bounds do not apply.
 **Balanced-panel and missing-data rule.**
 - `I₀ = 100`.
 - The family set `K` and weights `w_k` are fixed **before** computation.
-- Every published link requires a **valid LCI for every `k ∈ K` in both periods**.
+- Every published link requires a **valid — finite and strictly positive — LCI
+  for every `k ∈ K` in both periods**. An `LCI = +∞` (from `φ = 0`) is not valid
+  and cannot enter an index ratio.
 - Missing families are **never** carried forward, silently dropped, or followed by
   weight renormalization. **If the balanced link is unavailable, the index is not
   reported for that interval.**
+- A missing link **breaks the chained level series** and cannot be bridged.
+  Resuming publication after a gap requires an **explicit rebase** (a new base
+  period set to `I = 100`), reported as such.
 
 ## 6. Cost — two mutually exclusive regimes (never blended)
 ```
@@ -87,8 +101,10 @@ Owned:  C = replicas × ( annualized_hardware_host_cost_per_hour
 ```
 Cloud instance prices **already embed energy and facilities**, so EIA energy is
 **not** added in the Cloud regime (adding it double-counts). The Owned regime
-prices energy explicitly via PUE. A single observation uses exactly one regime;
-the two are never mixed. (The current AWS-priced empirics are **Cloud**.)
+prices energy explicitly via PUE, where **`power_kW` is the total per-replica draw
+(accelerators plus host)**, and its `C`/`T` cover the same replicas and interval.
+A single observation uses exactly one regime; the two are never mixed. (The current
+AWS-priced empirics are **Cloud**.)
 
 ## 7. Eligibility — primary vs. SLA variant
 - **Primary LCI / LCI index:** no hard eligibility; every observation contributes
@@ -107,11 +123,13 @@ the two are never mixed. (The current AWS-priced empirics are **Cloud**.)
 - **Statistical uncertainty** is propagated *separately* for two sources and is
   the only thing called "uncertainty": (i) **accuracy `a`** — from the benchmark
   numerator/denominator (or sample size) as a confidence interval; (ii)
-  **simulated latency** — from simulation replications. The two are propagated
-  independently into LCI.
+  **simulated latency** — from simulation replications. The two are **reported as
+  separate source-specific intervals**, not combined into a single band unless
+  statistical independence and a joint propagation method are explicitly assumed.
 - **Robustness sensitivity** is variation of *declared assumptions* (references,
-  `κ_ℓ`, delivery exponents, family weights, token counts, decode rates). It is
-  reported as robustness scenarios and **never** labeled statistical uncertainty.
+  `κ_ℓ`, delivery exponents, family weights, token counts, decode rates,
+  availability `q`, safety `s`). It is reported as robustness scenarios and
+  **never** labeled statistical uncertainty.
 - **Step-2 data requirement:** each accuracy observation must record the benchmark
   numerator/denominator (or sample size), the exact protocol/version, and a CI
   for `a`.
@@ -124,7 +142,9 @@ the two are never mixed. (The current AWS-priced empirics are **Cloud**.)
   and the `u` axis named as **offered load / fraction of peak**, not measured
   server utilization. Numerical clipping that hides `φ = 0` is disallowed.
 - Prices and benchmark accuracies are **sourced**; decode rates, token counts,
-  references, weights, and `κ_ℓ` are **declared assumptions**.
+  **availability `q`, safety `s`**, references, weights, and `κ_ℓ` are **declared
+  assumptions** (point values, varied in robustness §8) until a sourced
+  measurement and uncertainty treatment for `q`, `s` is defined.
 - The benchmark panel must be **comparable across periods**: one model variant,
   fixed evaluation protocol per metric; `a` admissible as yield only under that
   protocol. Mixed base/instruct or shot settings are disallowed.
