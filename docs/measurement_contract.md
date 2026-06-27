@@ -3,8 +3,9 @@
 **DRAFT — NO EMPIRICAL RESULT CURRENTLY VALID.** Defines the *primary* (soft,
 quality-adjusted) estimand. Supersedes the joint chance-constraint formulation
 for the empirical index. The prior "≈54% decline" and all wedge magnitudes are
-withdrawn pending reconstruction (see `STATUS.md`). Awaiting final sign-off before
-any code or empirical work.
+withdrawn pending reconstruction (see `STATUS.md`). **Signed off at commit
+`954dee1`.** Step 2 (comparable benchmark panel) is in progress; no empirical
+number is computed or published until the panel and subsequent steps are reviewed.
 
 ## 1. Estimand
 For a (task family `k`, location, period `t`) configuration,
@@ -160,7 +161,7 @@ AWS-priced empirics are **Cloud**.)
 
 ---
 
-## Resolved decisions (sign-off received / pending final read)
+## Resolved decisions (signed off at `954dee1`)
 1. **Accuracy:** `g_a = a` (linear; no `ā`, no exponent); fixed-protocol only. ✔
 2. **Above-reference:** capped at 1. ✔
 3. **Index:** fixed-weight chained geometric LCI index (§5) with the balanced-panel
