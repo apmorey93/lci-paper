@@ -546,7 +546,9 @@ should be read as a non-result. The economically meaningful uncertainty is struc
 one-at-a-time perturbation of the load-bearing \emph{assumptions} (decode rate
 $\pm$50\%, token counts $\pm$25\%, softness $\tau\in\{1,4\}$\,s, accuracy-/latency-heavy/equal
 QoS weights) leaves the final-period IPD in $[43.3,\,49.2]$ across all scenarios for
-which the index is well defined---a robust 51--57\% decline. Notably, the most
+which the index is well defined---a robust 51--57\% decline, within which the
+baseline 54\% lies. (In \texttt{results/tables/sensitivity.csv}, a blank IPD entry
+denotes a QoS-infeasible scenario.) Notably, the most
 adverse assumptions (a large decode cut, longer outputs, or their joint move, which
 inflate the per-request service time by up to $2.5\times$) do not \emph{reverse} the
 decline; instead they push the slow 2023 baseline against the latency-feasibility
