@@ -404,8 +404,12 @@ operational $q{=}0.999$, $s{=}0.98$ are documented assumptions (not sourced).
 Inputs: AWS p4d/p5 on-demand list prices (A100 \& H100,
 incl.\ the June-2025 H100 price cut), EIA industrial energy tariffs, and
 published Llama-2/3/3.1-70B scores (MMLU/HumanEval/GSM8K) mapped to the QA/code/
-reasoning families. Sources and access dates are in \texttt{data/external/} and
-\texttt{data/evals/}.
+reasoning families. Energy is held at a single sourced 2024 us-east-1 industrial
+rate across all periods and contributes $\approx$1\% of per-task cost, so it does
+not drive the index. The A100 is the cost-minimizing GPU in all twelve cells, so
+the cross-period decline is driven by A100 on-demand price reductions, (assumed)
+faster decoding, and benchmark-accuracy gains. Sources and access dates are in
+\texttt{data/external/} and \texttt{data/evals/}.
 
 \paragraph{Simulator validation.}
 For the M/M/$k$ special case ($B{=}1$, exponential), the simulated mean wait
@@ -482,7 +486,8 @@ Paasche      & 100.0 & 75.4 & 70.8 & 45.6 \\
 \paragraph{The market wedge.}
 Comparing the LCI frontier with public API list prices (PUI), the wedge
 $\text{PUI}/\LCI$ falls from $\sim$36--53$\times$ in 2023 (GPT-4-era pricing)
-to below $1\times$ by mid-2024 (Figure~\ref{fig:wedge}). A wedge below one means
+to below $1\times$ in 2024Q3, when the cheapest public API tier (PUI) switches to
+the GPT-4o-mini commodity tier (Figure~\ref{fig:wedge}). A wedge below one means
 hosted commodity tiers (e.g., GPT-4o-mini) are priced below our self-hosted
 Llama-70B frontier---reflecting smaller/cheaper served models, provider scale
 economies, or strategic pricing not captured by the 70B self-host configuration.

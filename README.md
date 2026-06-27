@@ -62,14 +62,22 @@ normalised simulation sweep, and compute
 
 ```
 LCI(u) = raw_cost(u) / phi(u),     raw_cost = (GPU + energy) * overhead
-phi    = alpha(a)^wa * lambda(l)^wl * rho(q)^wq * sigma(s)^ws   (paper Eq. 5)
+phi    = alpha^wa * lambda^wl * rho^wq * sigma^ws              (paper Eq. 5)
+  alpha = min(1, a/abar)                  # accuracy attainment vs target
+  lambda = lbar / (lbar + softplus(l-lbar))   # smooth latency hinge
+  rho   = min(1, (1-qbar)/(1-q))          # reliability attainment
+  sigma = min(1, (1-sbar)/(1-s))          # safety attainment
 ```
 
-`raw_cost(u)` falls with utilisation (cost spread over throughput) while
-`1/phi(u)` rises (latency erodes quality), so `LCI(u)` is **U-shaped** with an
-interior cost-minimising utilisation `u*`. The reported LCI per `(date, family)`
-is the **minimum over GPU options** — the cost frontier. The market price (PUI)
-comes from public API list prices; the wedge is `PUI / LCI`.
+`raw_cost(u)` falls with utilisation (fixed cost spread over throughput) while
+`1/phi(u)` rises (latency erodes quality). Over the full range `LCI(u)` is
+U-shaped, but the **latency chance constraint** (`p95 <= lbar`) caps feasible
+utilisation *before* the quality-driven upturn — so within the feasible region
+`LCI(u)` is decreasing and the cost-minimising operating point `u*` sits at the
+**latency-feasibility frontier** (`u* in [0.84, 0.90]` here), not at an interior
+minimum. The reported LCI per `(date, family)` is the **minimum over GPU options
+at u\***  — the cost frontier. The market price (PUI) comes from public API list
+prices; the wedge is `PUI / LCI`.
 
 ## Data inputs (sourced unless flagged assumed)
 
