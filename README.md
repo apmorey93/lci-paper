@@ -1,4 +1,10 @@
-﻿# LCI Paper: Public Calibration & IPD
+﻿> ⚠️ **RESULT WITHDRAWN — under reconstruction.** The headline IPD ("≈54%
+> decline") and the market-wedge magnitudes are **withdrawn pending
+> reconstruction**; do not cite or rely on them. See [`STATUS.md`](STATUS.md)
+> for why and what is being done. Treat this as *an interesting quality-adjusted
+> cost framework whose empirical result is not yet established.*
+
+# LCI Paper: Public Calibration & IPD
 
 This repository contains code and data schemas to compute **Locational Cost of Intelligence (LCI)** for several task families using **public inputs** and to aggregate them into a provisional **Intelligence Price Deflator (IPD)**.
 
