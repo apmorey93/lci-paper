@@ -35,6 +35,7 @@ instance-level recosting → narrowed simulator claim → re-built index) is in
 progress on the `real-experiments-lci` branch and precedes any mechanical patch.
 
 Until it is complete, treat this repository as **"an interesting quality-adjusted
-cost framework whose empirical result is not yet established."** The
-reproducibility scaffolding (deterministic pipeline, CI) remains valid; the
-*interpretation and magnitudes* do not.
+cost framework whose empirical result is not yet established."** Prior artifacts
+can be reproduced mechanically, but that reproducibility does not validate the
+estimand, the applied simulator regime, or the withdrawn results. The pipeline and
+CI will be revised during reconstruction.
