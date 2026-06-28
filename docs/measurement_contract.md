@@ -142,6 +142,16 @@ AWS-priced empirics are **Cloud**.)
   numerator/denominator (or sample size), the exact protocol/version, and a CI for
   `a` **with its confidence level, construction method, and sampling unit** (not
   merely `N` and interval endpoints).
+- **Amendment A1 (post-sign-off, per review).** When a primary source lacks the
+  information needed for a *valid* CI — e.g. a macro-averaged metric without
+  per-subject counts, or an undocumented evaluated denominator/scorer — the CI
+  treatment is recorded as **"not estimable from published data"**, **never** as
+  zero and never silently omitted. Any index built on such inputs is reported with
+  **PARTIAL uncertainty**: the explicit caveat that one or more inputs carry no
+  quantified statistical uncertainty. A metric whose **scoring rule** changes
+  across vintages (not just shots/CoT) is **not one fixed protocol** and may not
+  sit in the primary family set; it may appear only as a clearly labeled
+  linked-protocol sensitivity.
 
 ## 9. Scope & honesty rules (binding on the empirics)
 - Latency/throughput are **simulated**; the simulator must be **validated for the

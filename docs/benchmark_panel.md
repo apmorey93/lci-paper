@@ -1,66 +1,66 @@
 # Step 2 — Comparable Benchmark Panel: construction and finding
 
-**Status: panel built (extended-forward path), corrected to official sources. No
-LCI/index number computed.** Built per the signed measurement contract
-(`docs/measurement_contract.md`, §§8–9). Output: `data/evals/accuracy_panel.csv`.
+**Status: panel built and contract-aligned. No LCI/index number computed.**
+Per the signed measurement contract (`docs/measurement_contract.md`, §§8–9, incl.
+Amendment A1). Output: `data/evals/accuracy_panel.csv` (built by `src/build_panel.py`,
+which now asserts the rules below at build time).
 
-> **Correction (supersedes a prior draft of this file).** An earlier version
-> mistakenly copied the Llama-3.1 column into the Llama-3 row and used the
-> saturated GSM8K metric, which produced a false "quality is saturated / only cost
-> moves" claim. **That claim is withdrawn.** All in-panel values below are now from
-> Meta's **official model-card "Instruction tuned models" tables** (verified), and
-> quality does move.
+> **Corrections applied (supersede earlier drafts).** (a) An earlier draft copied
+> the Llama-3.1 column into the Llama-3 row and used saturated GSM8K, producing a
+> false "saturation" claim — **withdrawn**; values are now the official side-by-side
+> card numbers. (b) MATH is **not** one fixed protocol (its scoring rule changes at
+> L3.3) and is **demoted to a sensitivity**. (c) MMLU has **no valid binomial CI**.
 
-## Decision taken
-A like-for-like instruct panel for **2023** does not exist publicly (Llama-2-70B-Chat
-has only base-model / different-harness numbers). Per sign-off, we **excluded 2023
-and extended forward** along the frontier open ~70B-dense instruct models, one
-official protocol per metric.
+## PRIMARY panel — family set K = {QA, Code}
+The only two metrics with **one fixed official protocol (including scoring rule)**
+across Llama-3 / 3.1 / 3.3 Instruct:
 
-## Panel (instruction-tuned; official model-card tables)
-| Date | Model | MMLU (0-shot CoT) | HumanEval (0-shot pass@1) | MATH (0-shot CoT) |
-|------|-------|---:|---:|---:|
-| 2024-04 | Llama-3-70B-Instruct   | 80.9 | 81.7 | 51.0 |
-| 2024-07 | Llama-3.1-70B-Instruct | 86.0 | 80.5 | 68.0 |
-| 2024-12 | Llama-3.3-70B-Instruct | 86.0 | 88.4 | 77.0 |
-| 2025-06 | Llama-3.3 (matched-model cost continuation) | 86.0 | 88.4 | 77.0 |
+| Date | Model | MMLU 0-shot CoT (QA) | HumanEval pass@1 (Code) |
+|------|-------|---:|---:|
+| 2024-04 | Llama-3-70B-Instruct   | 80.9 | 81.7 |
+| 2024-07 | Llama-3.1-70B-Instruct | 86.0 | 80.5 |
+| 2024-12 | Llama-3.3-70B-Instruct | 86.0 | 88.4 |
+| 2025-06 | Llama-3.3 (matched-model cost continuation) | 86.0 | 88.4 |
 
-Sources: Llama-3.1-70B-Instruct card (L3 & L3.1, side by side) and Llama-3.3-70B-Instruct
-card. `2025-06` reuses Llama-3.3 weights — a **matched-model cost continuation**,
-not a new frontier-quality vintage.
+- **MMLU CI:** *not estimable from published data* — the value is a macro-average
+  over 57 subjects without per-subject counts. Recorded as such (never zero/blank).
+- **HumanEval CI:** provisional Wilson 95% over n=164 (rounded value; binomial
+  approximation; sampling unit = benchmark item).
+- Because one primary input (MMLU) has no quantified statistical uncertainty, any
+  index built on K carries **PARTIAL uncertainty** (contract §8 Amendment A1).
 
-## Reasoning metric: GSM8K → MATH (uniform replacement)
-GSM8K is **excluded**: it is absent from the official Llama-3.3 table (and was
-saturated, 93–95). The reasoning family is replaced **uniformly** by **MATH
-(0-shot CoT)**, which has an official protocol-matched value for all three
-vintages and is non-saturated (51 → 68 → 77). *Caveat:* the official metric string
-changes at L3.3 (`final_em` on L3/L3.1 → `sympy_intersection_score` on L3.3);
-matched on benchmark/shots/CoT but not on the exact scoring label — flagged in the
-CSV.
+## SENSITIVITY (not primary) — MATH
+MATH (0-shot CoT) is **0-shot CoT** for all three but the **official scoring metric
+changes** (`final_em` on L3/L3.1 → `sympy_intersection_score` on L3.3), so it is
+**not one fixed protocol** and is excluded from K. It is retained only as a
+**linked-protocol sensitivity** (values 51.0 → 68.0 → 77.0; CI *not estimable* —
+evaluated denominator/scorer not pinned). Use it only with the scorer-change
+caveat; never in the primary index.
 
-## CI policy (provisional; per review)
-Reconstructed CIs are **provisional** and given only where a binomial model
-reasonably approximates the published estimand:
-- **HumanEval** pass@1 over n=164 and **MATH** over n=5000 (assumed full test):
-  provisional Wilson 95% (values are rounded; per-item binary is an approximation).
-- **MMLU: no binomial CI** — the published value is a macro-average over 57
-  subjects; per-subject counts are unavailable, so a single-binomial CI would
-  misrepresent the estimand (`ci_status = "none …"`).
-- Overlapping marginal CIs do **not** establish significance of a cross-model
-  change (that needs paired item outcomes); **no significance is claimed.**
+## Excluded
+- **GSM8K** — absent from the official Llama-3.3 table.
+- **2023 Llama-2-70B-Chat** — base-variant / different-harness only; not comparable
+  (`panel_role = excluded`).
 
-## Corrected finding
-Quality **does** move on the official, protocol-matched panel: MATH rises
-strongly (51→68→77), MMLU steps up then plateaus (80.9→86.0), HumanEval dips then
-rises (81.7→80.5→88.4). So the eventual index will reflect **both** a real
-quality improvement (reasoning especially) **and** cost change — not a pure cost
-story. The 2025 leg isolates cost at fixed quality (matched model). Magnitudes
-remain to be computed (Steps 3 & 5); none are reported here.
+## Provenance (pinned)
+Each row records `source_table = "Instruction tuned models"` and `source_revision`
+= the canonical `meta-llama/llama-models` `MODEL_CARD.md` path (L3/L3.1 card for
+L3 & L3.1; L3.3 card for L3.3), accessed 2026-06-27. (Upgrade to exact commit SHAs
+on request.)
 
-## Excluded (recorded, `in_panel=False`)
-The 2023 Llama-2 rows are kept with mismatch notes and excluded from any index.
+## Build-time guards (in `build_panel.py`)
+Assertions prevent silent violations: every `primary` row has a non-empty
+`ci_status`; the primary family set is a subset of {QA, Code}; MATH never appears
+as primary; and each primary family has a single uniform protocol string.
+
+## Finding (valid panel)
+On the corrected primary panel, **quality moves**: MMLU steps up then plateaus
+(80.9→86.0), HumanEval dips then rises (81.7→80.5→88.4); the MATH sensitivity rises
+strongly (51→68→77). So a future index will reflect **both** quality and cost
+change (not a pure cost story), and the 2025 leg isolates cost at fixed quality.
+Magnitudes are deferred to Steps 3 & 5; none are reported here.
 
 ## Next
-Steps 3 (instance-level recosting, Cloud regime) and 5 (geometric index) will
-consume only `in_panel=True` rows under the balanced-panel rule. No empirical
-LCI/index number has been computed yet.
+Steps 3 (instance-level recosting, Cloud regime) and 5 (geometric index, balanced
+over K = {QA, Code}) consume only `panel_role = primary` rows; MATH enters only as
+a sensitivity. No empirical LCI/index number has been computed.
