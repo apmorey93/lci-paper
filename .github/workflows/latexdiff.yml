@@ -10,20 +10,36 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Install TeX
+      - name: Prepare latexdiff inputs
+        shell: bash
+        run: |
+          set -euo pipefail
+          diff_dir="${RUNNER_TEMP}/lci-latexdiff"
+          mkdir -p "${diff_dir}"
+          git show origin/${{ github.base_ref }}:lci_paper.tex > "${diff_dir}/old.tex"
+          git show ${{ github.sha }}:lci_paper.tex > "${diff_dir}/new.tex"
+          # Normalize the three invalid counter names in the historical base so
+          # the diff artifact can compile while this PR repairs the source.
+          sed -i \
+            -e 's/\\topnumber/topnumber/g' \
+            -e 's/\\bottomnumber/bottomnumber/g' \
+            -e 's/\\totalnumber/totalnumber/g' \
+            "${diff_dir}/old.tex" "${diff_dir}/new.tex"
+          # Author is a moving preamble argument. Compare it through the normal
+          # PDF build and keep latexdiff focused on the document body.
+          perl -0pi -e 's/\\author\{.*?\}\r?\n\\date\{\}/\\author{Aditya Morey}\n\\date{}/s' \
+            "${diff_dir}/old.tex" "${diff_dir}/new.tex"
+          grep -Fqx '\author{Aditya Morey}' "${diff_dir}/old.tex"
+          grep -Fqx '\author{Aditya Morey}' "${diff_dir}/new.tex"
+      - name: Generate and compile latexdiff
         uses: xu-cheng/latex-action@v3
         with:
-          root_file: dummy.tex
-          pre_compile: echo "\documentclass{article}\begin{document}dummy\end{document}" > dummy.tex
-      - name: Generate latexdiff
-        run: |
-          mkdir -p build
-          git show origin/${{ github.base_ref }}:lci_paper.tex > /tmp/old.tex
-          git show ${{ github.sha }}:lci_paper.tex > /tmp/new.tex
-          latexdiff /tmp/old.tex /tmp/new.tex > build/lci_paper-diff.tex
-          latexmk -pdf -silent build/lci_paper-diff.tex
+          root_file: ${{ runner.temp }}/lci-latexdiff/lci_paper-diff.tex
+          work_in_root_file_dir: true
+          pre_compile: |
+            latexdiff "${RUNNER_TEMP}/lci-latexdiff/old.tex" "${RUNNER_TEMP}/lci-latexdiff/new.tex" > "${RUNNER_TEMP}/lci-latexdiff/lci_paper-diff.tex"
       - name: Upload diff artifact
         uses: actions/upload-artifact@v4
         with:
           name: lci_paper-diff
-          path: build/lci_paper-diff.pdf
+          path: ${{ runner.temp }}/lci-latexdiff/lci_paper-diff.pdf
