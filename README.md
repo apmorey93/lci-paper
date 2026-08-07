@@ -23,7 +23,7 @@ Some source files retain earlier working titles. The SSRN title linked above is 
 All computations rely on **public datasets** (e.g., energy prices, cloud list prices, published benchmarks, light latency/accuracy probes). No proprietary data are required.
 
 ## Quick start
-\\\ash
+```bash
 python -m venv .venv && source .venv/bin/activate    # Windows: .venv\\Scripts\\activate
 pip install -r requirements.txt
 
@@ -33,9 +33,9 @@ pip install -r requirements.txt
 python src/lci_program.py
 python src/make_ipd.py
 python src/figures.py
-\\\
+```
 
-Outputs go to \esults/tables\ and \esults/figures\. A metadata file \esults/meta.json\ records environment details.
+Outputs go to `results/tables` and `results/figures`. A metadata file `results/meta.json` records environment details.
 
 ## Data schemas (CSV)
 **Accuracy (per family x model x region x date)** — \data/evals/accuracy_schema.csv\ header:
@@ -60,7 +60,7 @@ date,provider,endpoint,price_per_token_usd,egress_usd_per_gb,source,url,notes
 
 ## Reproducibility
 - Deterministic seeds when simulating.
-- \esults/meta.json\ captures versions and timestamps.
+- `results/meta.json` captures versions and timestamps.
 - All inputs are public; list and link sources in the CSVs.
 
 ## License & citation
