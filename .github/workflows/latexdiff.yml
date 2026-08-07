@@ -25,13 +25,19 @@ jobs:
             -e 's/\\bottomnumber/bottomnumber/g' \
             -e 's/\\totalnumber/totalnumber/g' \
             "${diff_dir}/old.tex" "${diff_dir}/new.tex"
+          # Author is a moving preamble argument. Compare it through the normal
+          # PDF build and keep latexdiff focused on the document body.
+          perl -0pi -e 's/\\author\{.*?\}\r?\n\\date\{\}/\\author{Aditya Morey}\n\\date{}/s' \
+            "${diff_dir}/old.tex" "${diff_dir}/new.tex"
+          grep -Fqx '\author{Aditya Morey}' "${diff_dir}/old.tex"
+          grep -Fqx '\author{Aditya Morey}' "${diff_dir}/new.tex"
       - name: Generate and compile latexdiff
         uses: xu-cheng/latex-action@v3
         with:
           root_file: ${{ runner.temp }}/lci-latexdiff/lci_paper-diff.tex
           work_in_root_file_dir: true
           pre_compile: |
-            latexdiff --exclude-textcmd="author" "${RUNNER_TEMP}/lci-latexdiff/old.tex" "${RUNNER_TEMP}/lci-latexdiff/new.tex" > "${RUNNER_TEMP}/lci-latexdiff/lci_paper-diff.tex"
+            latexdiff "${RUNNER_TEMP}/lci-latexdiff/old.tex" "${RUNNER_TEMP}/lci-latexdiff/new.tex" > "${RUNNER_TEMP}/lci-latexdiff/lci_paper-diff.tex"
       - name: Upload diff artifact
         uses: actions/upload-artifact@v4
         with:
