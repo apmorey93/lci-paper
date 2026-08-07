@@ -8,8 +8,10 @@
 
 This repository contains code and data schemas to compute **Locational Cost of Intelligence (LCI)** for several task families using **public inputs** and to aggregate them into a provisional **Intelligence Price Deflator (IPD)**.
 
-- Paper: *Pricing Usable Intelligence: A Location-Adjusted Cost Function with QoS Chance Constraints*
-- Author: **Aditya Morey** (ORCID: https://orcid.org/0009-0000-2864-4586) — <adityamorey1723@gmail.com>
+- Canonical SSRN record: *[The Cost of Usable Intelligence: A Unified Framework for Measuring AI's Economic Productivity Frontier](https://ssrn.com/abstract=5594151)* ([DOI](https://doi.org/10.2139/ssrn.5594151))
+- Author: **[Aditya Morey](https://www.adityamorey.com)** ([ORCID](https://orcid.org/0009-0000-2864-4586)) — <adityamorey1723@gmail.com>
+
+Some source files retain earlier working titles. The SSRN title linked above is the canonical public-record title; the withdrawal notice and [`STATUS.md`](STATUS.md) still govern the repository's empirical claims.
 
 ## What this repo provides
 - \src/lci_program.py\ — computes QOU and LCI from public inputs.
@@ -66,4 +68,3 @@ date,provider,endpoint,price_per_token_usd,egress_usd_per_gb,source,url,notes
 - Citation metadata in \CITATION.cff\.
 
 ![Build Paper](https://github.com/apmorey93/lci-paper/actions/workflows/build_paper.yml/badge.svg)
-

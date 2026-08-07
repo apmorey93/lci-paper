@@ -1,4 +1,4 @@
-﻿cff-version: 1.2.0
+cff-version: 1.2.0
 message: If you use this repository, please cite it as below.
 title: "LCI (Locational Cost of Intelligence): Measurement & IPD Calibration"
 authors:
@@ -6,6 +6,7 @@ authors:
     given-names: Aditya
     email: adityamorey1723@gmail.com
     orcid: "https://orcid.org/0009-0000-2864-4586"
+    website: "https://www.adityamorey.com"
 repository-code: "https://github.com/apmorey93/lci-paper"
 license: MIT
 type: software
@@ -19,8 +20,12 @@ keywords:
   - queueing
 preferred-citation:
   type: article
-  title: "Pricing Usable Intelligence: A Location-Adjusted Cost Function with QoS Chance Constraints"
+  title: "The Cost of Usable Intelligence: A Unified Framework for Measuring AI's Economic Productivity Frontier"
   authors:
     - family-names: Morey
       given-names: Aditya
+      orcid: "https://orcid.org/0009-0000-2864-4586"
+      website: "https://www.adityamorey.com"
+  doi: "10.2139/ssrn.5594151"
+  url: "https://ssrn.com/abstract=5594151"
   year: 2025
