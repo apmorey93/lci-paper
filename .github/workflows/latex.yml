@@ -26,3 +26,10 @@ jobs:
         with:
           name: lci_paper-pdf
           path: build/lci_paper.pdf
+      - name: Upload LaTeX log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lci_paper-log
+          path: build/lci_paper.log
+          if-no-files-found: warn

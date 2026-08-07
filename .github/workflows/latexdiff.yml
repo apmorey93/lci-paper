@@ -18,6 +18,13 @@ jobs:
           mkdir -p "${diff_dir}"
           git show origin/${{ github.base_ref }}:lci_paper.tex > "${diff_dir}/old.tex"
           git show ${{ github.sha }}:lci_paper.tex > "${diff_dir}/new.tex"
+          # Normalize the three invalid counter names in the historical base so
+          # the diff artifact can compile while this PR repairs the source.
+          sed -i \
+            -e 's/\\topnumber/topnumber/g' \
+            -e 's/\\bottomnumber/bottomnumber/g' \
+            -e 's/\\totalnumber/totalnumber/g' \
+            "${diff_dir}/old.tex" "${diff_dir}/new.tex"
       - name: Generate and compile latexdiff
         uses: xu-cheng/latex-action@v3
         with:
